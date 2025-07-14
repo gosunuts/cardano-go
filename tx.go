@@ -124,8 +124,8 @@ type TxBody struct {
 	// Optionals
 	TTL                   Uint64        `cbor:"3,keyasint,omitempty"`
 	Certificates          []Certificate `cbor:"4,keyasint,omitempty"`
-	Withdrawals           interface{}   `cbor:"5,keyasint,omitempty"` // unsupported
-	Update                interface{}   `cbor:"6,keyasint,omitempty"` // unsupported
+	Withdrawals           any           `cbor:"5,keyasint,omitempty"` // unsupported
+	Update                any           `cbor:"6,keyasint,omitempty"` // unsupported
 	AuxiliaryDataHash     *Hash32       `cbor:"7,keyasint,omitempty"`
 	ValidityIntervalStart Uint64        `cbor:"8,keyasint,omitempty"`
 	Mint                  *Mint         `cbor:"9,keyasint,omitempty"`

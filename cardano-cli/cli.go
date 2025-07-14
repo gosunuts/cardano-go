@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"strconv"
@@ -117,7 +116,7 @@ func (c *CardanoCli) UTxOs(addr cardano.Address) ([]cardano.UTxO, error) {
 					policyID,
 					cardano.NewAssets().
 						Set(
-							cardano.NewAssetName(string(assetName)),
+							cardano.NewAssetName(assetName),
 							cardano.BigNum(assetValue),
 						),
 				)
@@ -159,11 +158,11 @@ func (c *CardanoCli) SubmitTx(tx *cardano.Tx) (*cardano.Hash32, error) {
 		CborHex: tx.Hex(),
 	}
 
-	txFile, err := ioutil.TempFile(os.TempDir(), "tx_")
+	txFile, err := os.CreateTemp(os.TempDir(), "tx_")
 	if err != nil {
 		return nil, err
 	}
-	defer os.Remove(txFile.Name())
+	defer func() { _ = os.Remove(txFile.Name()) }()
 
 	if err := json.NewEncoder(txFile).Encode(txOut); err != nil {
 		return nil, err

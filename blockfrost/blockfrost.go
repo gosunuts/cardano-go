@@ -6,7 +6,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strconv"
 
@@ -92,7 +92,7 @@ func (b *BlockfrostNode) UTxOs(addr cardano.Address) ([]cardano.UTxO, error) {
 						policyID,
 						cardano.NewAssets().
 							Set(
-								cardano.NewAssetName(string(assetName)),
+								cardano.NewAssetName(assetName),
 								cardano.BigNum(assetValue),
 							),
 					)
@@ -140,9 +140,9 @@ func (b *BlockfrostNode) SubmitTx(tx *cardano.Tx) (*cardano.Hash32, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
-	respBody, err := ioutil.ReadAll(resp.Body)
+	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}

@@ -235,11 +235,12 @@ func (addr Address) String() string {
 // NewBaseAddress returns a new Base Address.
 func NewBaseAddress(network Network, payment StakeCredential, stake StakeCredential) (Address, error) {
 	addrType := Base
-	if payment.Type == ScriptCredential && stake.Type == KeyCredential {
+	switch {
+	case payment.Type == ScriptCredential && stake.Type == KeyCredential:
 		addrType = Base + 1
-	} else if payment.Type == KeyCredential && stake.Type == ScriptCredential {
+	case payment.Type == KeyCredential && stake.Type == ScriptCredential:
 		addrType = Base + 2
-	} else if payment.Type == ScriptCredential && stake.Type == ScriptCredential {
+	case payment.Type == ScriptCredential && stake.Type == ScriptCredential:
 		addrType = Base + 3
 	}
 	return Address{Type: addrType, Network: network, Payment: payment, Stake: stake}, nil

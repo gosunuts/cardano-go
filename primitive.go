@@ -151,13 +151,14 @@ func (v *Value) Cmp(rhs *Value) int {
 	lrZero := v.Sub(rhs).IsZero()
 	rlZero := rhs.Sub(v).IsZero()
 
-	if !lrZero && !rlZero {
+	switch {
+	case !lrZero && !rlZero:
 		return 2
-	} else if lrZero && !rlZero {
+	case lrZero && !rlZero:
 		return -1
-	} else if !lrZero && rlZero {
+	case !lrZero && rlZero:
 		return 1
-	} else {
+	default:
 		return 0
 	}
 }
@@ -167,7 +168,7 @@ func (v *Value) MarshalCBOR() ([]byte, error) {
 	if v.OnlyCoin() {
 		return cborEnc.Marshal(v.Coin)
 	} else {
-		return cborEnc.Marshal([]interface{}{v.Coin, v.MultiAsset})
+		return cborEnc.Marshal([]any{v.Coin, v.MultiAsset})
 	}
 }
 
@@ -449,27 +450,27 @@ func (m *Mint) MultiAsset() *MultiAsset {
 	return ma
 }
 
-func (ma *Mint) numPIDs() uint {
-	return uint(len(ma.m))
-}
+// func (ma *Mint) numPIDs() uint {
+// 	return uint(len(ma.m))
+// }
 
-func (ma *Mint) numAssets() uint {
-	var num uint
-	for _, assets := range ma.m {
-		num += uint(len(assets.m))
-	}
-	return num
-}
+// func (ma *Mint) numAssets() uint {
+// 	var num uint
+// 	for _, assets := range ma.m {
+// 		num += uint(len(assets.m))
+// 	}
+// 	return num
+// }
 
-func (ma *Mint) assetsLength() uint {
-	var sum uint
-	for _, assets := range ma.m {
-		for assetName := range assets.m {
-			sum += uint(len(assetName.Bytes()))
-		}
-	}
-	return sum
-}
+// func (ma *Mint) assetsLength() uint {
+// 	var sum uint
+// 	for _, assets := range ma.m {
+// 		for assetName := range assets.m {
+// 			sum += uint(len(assetName.Bytes()))
+// 		}
+// 	}
+// 	return sum
+// }
 
 // MarshalCBOR implements cbor.Marshaler
 func (ma *Mint) MarshalCBOR() ([]byte, error) {
@@ -584,7 +585,7 @@ func (r *Rational) UnmarshalCBOR(data []byte) error {
 	return nil
 }
 
-func (r *Rational) tagSet(contentType interface{}) (cbor.TagSet, error) {
+func (r *Rational) tagSet(contentType any) (cbor.TagSet, error) {
 	tags := cbor.NewTagSet()
 	err := tags.Add(
 		cbor.TagOptions{EncTag: cbor.EncTagRequired, DecTag: cbor.DecTagRequired},

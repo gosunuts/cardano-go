@@ -59,7 +59,7 @@ func TestTxEncoding(t *testing.T) {
 	txBuilder.AddChangeIfNeeded(addr)
 	txBuilder.AddAuxiliaryData(&AuxiliaryData{
 		Metadata: Metadata{
-			0: map[interface{}]interface{}{
+			0: map[any]any{
 				"secret": "1234",
 				"values": uint64(10),
 			},

@@ -13,7 +13,7 @@ var (
 )
 
 type ByteString struct {
-	// XXX: replace with interface{} storing fixed-length byte array?
+	// XXX: replace with any storing fixed-length byte array?
 	// We use a string because []byte isn't comparable
 	data string
 }

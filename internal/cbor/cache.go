@@ -58,17 +58,18 @@ func newTypeInfo(t reflect.Type) *typeInfo {
 	tInfo.nonPtrType = t
 	tInfo.nonPtrKind = k
 
-	if k == reflect.Interface {
+	switch {
+	case k == reflect.Interface:
 		if t.NumMethod() == 0 {
 			tInfo.spclType = specialTypeEmptyIface
 		} else {
 			tInfo.spclType = specialTypeIface
 		}
-	} else if t == typeTag {
+	case t == typeTag:
 		tInfo.spclType = specialTypeTag
-	} else if t == typeTime {
+	case t == typeTime:
 		tInfo.spclType = specialTypeTime
-	} else if reflect.PtrTo(t).Implements(typeUnmarshaler) {
+	case reflect.PointerTo(t).Implements(typeUnmarshaler):
 		tInfo.spclType = specialTypeUnmarshalerIface
 	}
 

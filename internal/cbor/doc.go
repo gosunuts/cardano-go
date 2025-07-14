@@ -52,14 +52,14 @@ EncMode and DecMode Interfaces
 
 	    // EncMode interface uses immutable options and is safe for concurrent use.
 	    type EncMode interface {
-		Marshal(v interface{}) ([]byte, error)
+		Marshal(v any) ([]byte, error)
 		NewEncoder(w io.Writer) *Encoder
 		EncOptions() EncOptions  // returns copy of options
 	    }
 
 	    // DecMode interface uses immutable options and is safe for concurrent use.
 	    type DecMode interface {
-		Unmarshal(data []byte, v interface{}) error
+		Unmarshal(data []byte, v any) error
 		NewDecoder(r io.Reader) *Decoder
 		DecOptions() DecOptions  // returns copy of options
 	    }

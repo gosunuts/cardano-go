@@ -74,7 +74,7 @@ func (s *StakeCredential) Equal(rhs StakeCredential) bool {
 
 // MarshalCBOR implements cbor.Marshaler.
 func (s *StakeCredential) MarshalCBOR() ([]byte, error) {
-	var cred []interface{}
+	var cred []any
 	switch s.Type {
 	case KeyCredential:
 		cred = append(cred, s.Type, s.KeyHash)
