@@ -3,7 +3,7 @@ package cardano
 import (
 	"fmt"
 
-	"github.com/echovl/cardano-go/crypto"
+	"github.com/cryptogarageinc/cardano-go/crypto"
 )
 
 type CertificateType uint
@@ -256,8 +256,8 @@ type RelayType uint64
 
 const (
 	SingleHostAddr RelayType = 0
-	SingleHostName           = 1
-	MultiHostName            = 2
+	SingleHostName RelayType = 1
+	MultiHostName  RelayType = 2
 )
 
 type singleHostAddr struct {

@@ -6,7 +6,7 @@ import (
 	"math/big"
 	"reflect"
 
-	"github.com/echovl/cardano-go/internal/cbor"
+	"github.com/cryptogarageinc/cardano-go/internal/cbor"
 )
 
 type Network byte
@@ -142,10 +142,11 @@ func (v *Value) Sub(rhs *Value) *Value {
 }
 
 // Compares two Values and returns
-//      -1 if v < rhs
-//       0 if v == rhs
-//       1 if v > rhs
-//       2 if not comparable
+//
+//	-1 if v < rhs
+//	 0 if v == rhs
+//	 1 if v > rhs
+//	 2 if not comparable
 func (v *Value) Cmp(rhs *Value) int {
 	lrZero := v.Sub(rhs).IsZero()
 	rlZero := rhs.Sub(v).IsZero()

@@ -12,7 +12,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/echovl/cardano-go"
+	"github.com/cryptogarageinc/cardano-go"
 )
 
 // CardanoCli implements Node using cardano-cli and a local node.

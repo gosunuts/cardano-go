@@ -3,7 +3,7 @@ package cardano
 import (
 	"fmt"
 
-	"github.com/echovl/cardano-go/crypto"
+	"github.com/cryptogarageinc/cardano-go/crypto"
 )
 
 type ScriptHashNamespace uint8
@@ -86,7 +86,7 @@ func (ns *NativeScript) Hash() (Hash28, error) {
 		return nil, err
 	}
 	bytes = append([]byte{byte(NativeScriptNamespace)}, bytes...)
-	return Blake224Hash(append(bytes))
+	return Blake224Hash(bytes)
 }
 
 // Bytes returns the CBOR encoding of the script as bytes.
