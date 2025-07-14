@@ -1027,7 +1027,6 @@ func TestEncodeSharedTag(t *testing.T) {
 	if !bytes.Equal(b, wantCborData) {
 		t.Errorf("Marshal(%v) = 0x%x, want 0x%x", v, b, wantCborData)
 	}
-
 }
 
 func TestDecodeSharedTag(t *testing.T) {

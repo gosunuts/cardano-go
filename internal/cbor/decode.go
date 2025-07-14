@@ -40,17 +40,17 @@ import (
 // To unmarshal CBOR into an empty interface value, Unmarshal uses the
 // following rules:
 //
-//     CBOR booleans decode to bool.
-//     CBOR positive integers decode to uint64.
-//     CBOR negative integers decode to int64 (big.Int if value overflows).
-//     CBOR floating points decode to float64.
-//     CBOR byte strings decode to []byte.
-//     CBOR text strings decode to string.
-//     CBOR arrays decode to []interface{}.
-//     CBOR maps decode to map[interface{}]interface{}.
-//     CBOR null and undefined values decode to nil.
-//     CBOR times (tag 0 and 1) decode to time.Time.
-//     CBOR bignums (tag 2 and 3) decode to big.Int.
+//	CBOR booleans decode to bool.
+//	CBOR positive integers decode to uint64.
+//	CBOR negative integers decode to int64 (big.Int if value overflows).
+//	CBOR floating points decode to float64.
+//	CBOR byte strings decode to []byte.
+//	CBOR text strings decode to string.
+//	CBOR arrays decode to []interface{}.
+//	CBOR maps decode to map[interface{}]interface{}.
+//	CBOR null and undefined values decode to nil.
+//	CBOR times (tag 0 and 1) decode to time.Time.
+//	CBOR bignums (tag 2 and 3) decode to big.Int.
 //
 // To unmarshal a CBOR array into a slice, Unmarshal allocates a new slice
 // if the CBOR array is empty or slice capacity is less than CBOR array length.
@@ -75,9 +75,9 @@ import (
 // To unmarshal a CBOR map into a struct, Unmarshal matches CBOR map keys to the
 // keys in the following priority:
 //
-//     1. "cbor" key in struct field tag,
-//     2. "json" key in struct field tag,
-//     3. struct field name.
+//  1. "cbor" key in struct field tag,
+//  2. "json" key in struct field tag,
+//  3. struct field name.
 //
 // Unmarshal tries an exact match for field name, then a case-insensitive match.
 // Map key-value pairs without corresponding struct fields are ignored.  See
@@ -581,7 +581,6 @@ const (
 // parseToValue decodes CBOR data to value.  It assumes data is well-formed,
 // and does not perform bounds checking.
 func (d *decoder) parseToValue(v reflect.Value, tInfo *typeInfo) error { //nolint:gocyclo
-
 	if tInfo.spclType == specialTypeIface {
 		if !v.IsNil() {
 			// Use value type
@@ -590,7 +589,6 @@ func (d *decoder) parseToValue(v reflect.Value, tInfo *typeInfo) error { //nolin
 		} else {
 			// Create and use registered type if CBOR data is registered tag
 			if d.dm.tags != nil && d.nextCBORType() == cborTypeTag {
-
 				off := d.off
 				var tagNums []uint64
 				for d.nextCBORType() == cborTypeTag {
@@ -731,7 +729,7 @@ func (d *decoder) parseToValue(v reflect.Value, tInfo *typeInfo) error { //nolin
 		} else {
 			return fillByteString(t, b, v)
 		}
-		return fillByteString(t, b, v)
+
 	case cborTypeTextString:
 		b, err := d.parseTextString()
 		if err != nil {
@@ -1316,7 +1314,6 @@ func (d *decoder) parseMapToMap(v reflect.Value, tInfo *typeInfo) error { //noli
 			keyValue.Elem().IsValid() &&
 			keyValue.Elem().Type() == typeByteSlice &&
 			d.dm.mapKeyByteString == MapKeyByteStringWrap {
-
 			keyValue.Set(reflect.ValueOf(NewByteString(keyValue.Elem().Bytes())))
 			keyType = keyValue.Type()
 		}

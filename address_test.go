@@ -155,6 +155,5 @@ func TestNat(t *testing.T) {
 		if got != want {
 			t.Errorf("invalid nat decoding\ngot: %v\nwant: %v", got, want)
 		}
-
 	}
 }

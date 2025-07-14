@@ -90,7 +90,6 @@ func getFields(t reflect.Type) (flds fields, structOptions string) {
 	flds, nTypes := appendFields(t, nil, nil, nil)
 
 	if len(nTypes) > 0 {
-
 		var cTypes map[reflect.Type][][]int      // current level anonymous fields' types and indexes
 		vTypes := map[reflect.Type]bool{t: true} // visited field types at less nested levels
 

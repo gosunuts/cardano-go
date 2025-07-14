@@ -2630,103 +2630,103 @@ func TestShortestFloat16(t *testing.T) {
 }
 
 /*
-func TestShortestFloat32(t *testing.T) {
-	testCases := []struct {
-		name         string
-		f64          float64
-		wantCborData []byte
-	}{
-		// Data from RFC 7049 appendix A
-		{"Shrink to float32", 0.0, hexDecode("fa00000000")},
-		{"Shrink to float32", 1.0, hexDecode("fa3f800000")},
-		{"Shrink to float32", 1.5, hexDecode("fa3fc00000")},
-		{"Shrink to float32", 65504.0, hexDecode("fa477fe000")},
-		{"Shrink to float32", 5.960464477539063e-08, hexDecode("fa33800000")},
-		{"Shrink to float32", 6.103515625e-05, hexDecode("fa38800000")},
-		{"Shrink to float32", -4.0, hexDecode("fac0800000")},
-		// Data from https://en.wikipedia.org/wiki/Half-precision_floating-point_format
-		{"Shrink to float32", 0.333251953125, hexDecode("fa3eaaa000")},
-		// Data from 7049bis 4.2.1 and 5.5
-		{"Shrink to float32", 5.5, hexDecode("fa40b00000")},
-		// Data from RFC 7049 appendix A
-		{"Shrink to float32", 100000.0, hexDecode("fa47c35000")},
-		{"Shrink to float32", 3.4028234663852886e+38, hexDecode("fa7f7fffff")},
-		// Data from 7049bis 4.2.1 and 5.5
-		{"Shrink to float32", 5555.5, hexDecode("fa45ad9c00")},
-		{"Shrink to float32", 1000000.5, hexDecode("fa49742408")},
-		// Data from RFC 7049 appendix A
-		{"Shrink to float64", 1.0e+300, hexDecode("fb7e37e43c8800759c")},
+	func TestShortestFloat32(t *testing.T) {
+		testCases := []struct {
+			name         string
+			f64          float64
+			wantCborData []byte
+		}{
+			// Data from RFC 7049 appendix A
+			{"Shrink to float32", 0.0, hexDecode("fa00000000")},
+			{"Shrink to float32", 1.0, hexDecode("fa3f800000")},
+			{"Shrink to float32", 1.5, hexDecode("fa3fc00000")},
+			{"Shrink to float32", 65504.0, hexDecode("fa477fe000")},
+			{"Shrink to float32", 5.960464477539063e-08, hexDecode("fa33800000")},
+			{"Shrink to float32", 6.103515625e-05, hexDecode("fa38800000")},
+			{"Shrink to float32", -4.0, hexDecode("fac0800000")},
+			// Data from https://en.wikipedia.org/wiki/Half-precision_floating-point_format
+			{"Shrink to float32", 0.333251953125, hexDecode("fa3eaaa000")},
+			// Data from 7049bis 4.2.1 and 5.5
+			{"Shrink to float32", 5.5, hexDecode("fa40b00000")},
+			// Data from RFC 7049 appendix A
+			{"Shrink to float32", 100000.0, hexDecode("fa47c35000")},
+			{"Shrink to float32", 3.4028234663852886e+38, hexDecode("fa7f7fffff")},
+			// Data from 7049bis 4.2.1 and 5.5
+			{"Shrink to float32", 5555.5, hexDecode("fa45ad9c00")},
+			{"Shrink to float32", 1000000.5, hexDecode("fa49742408")},
+			// Data from RFC 7049 appendix A
+			{"Shrink to float64", 1.0e+300, hexDecode("fb7e37e43c8800759c")},
+		}
+		em, err := EncOptions{ShortestFloat: ShortestFloat32}.EncMode()
+		if err != nil {
+			t.Errorf("EncMode() returned an error %v", err)
+		}
+		for _, tc := range testCases {
+			t.Run(tc.name, func(t *testing.T) {
+				b, err := em.Marshal(tc.f64)
+				if err != nil {
+					t.Errorf("Marshal(%v) returned error %v", tc.f64, err)
+				} else if !bytes.Equal(b, tc.wantCborData) {
+					t.Errorf("Marshal(%v) = 0x%x, want 0x%x", tc.f64, b, tc.wantCborData)
+				}
+				var f64 float64
+				if err = Unmarshal(b, &f64); err != nil {
+					t.Errorf("Unmarshal(0x%x) returned error %v", b, err)
+				} else if f64 != tc.f64 {
+					t.Errorf("Unmarshal(0x%x) = %f, want %f", b, f64, tc.f64)
+				}
+			})
+		}
 	}
-	em, err := EncOptions{ShortestFloat: ShortestFloat32}.EncMode()
-	if err != nil {
-		t.Errorf("EncMode() returned an error %v", err)
-	}
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			b, err := em.Marshal(tc.f64)
-			if err != nil {
-				t.Errorf("Marshal(%v) returned error %v", tc.f64, err)
-			} else if !bytes.Equal(b, tc.wantCborData) {
-				t.Errorf("Marshal(%v) = 0x%x, want 0x%x", tc.f64, b, tc.wantCborData)
-			}
-			var f64 float64
-			if err = Unmarshal(b, &f64); err != nil {
-				t.Errorf("Unmarshal(0x%x) returned error %v", b, err)
-			} else if f64 != tc.f64 {
-				t.Errorf("Unmarshal(0x%x) = %f, want %f", b, f64, tc.f64)
-			}
-		})
-	}
-}
 
-func TestShortestFloat64(t *testing.T) {
-	testCases := []struct {
-		name         string
-		f64          float64
-		wantCborData []byte
-	}{
-		// Data from RFC 7049 appendix A
-		{"Shrink to float64", 0.0, hexDecode("fb0000000000000000")},
-		{"Shrink to float64", 1.0, hexDecode("fb3ff0000000000000")},
-		{"Shrink to float64", 1.5, hexDecode("fb3ff8000000000000")},
-		{"Shrink to float64", 65504.0, hexDecode("fb40effc0000000000")},
-		{"Shrink to float64", 5.960464477539063e-08, hexDecode("fb3e70000000000000")},
-		{"Shrink to float64", 6.103515625e-05, hexDecode("fb3f10000000000000")},
-		{"Shrink to float64", -4.0, hexDecode("fbc010000000000000")},
-		// Data from https://en.wikipedia.org/wiki/Half-precision_floating-point_format
-		{"Shrink to float64", 0.333251953125, hexDecode("fb3fd5540000000000")},
-		// Data from 7049bis 4.2.1 and 5.5
-		{"Shrink to float64", 5.5, hexDecode("fb4016000000000000")},
-		// Data from RFC 7049 appendix A
-		{"Shrink to float64", 100000.0, hexDecode("fb40f86a0000000000")},
-		{"Shrink to float64", 3.4028234663852886e+38, hexDecode("fb47efffffe0000000")},
-		// Data from 7049bis 4.2.1 and 5.5
-		{"Shrink to float64", 5555.5, hexDecode("fb40b5b38000000000")},
-		{"Shrink to float64", 1000000.5, hexDecode("fb412e848100000000")},
-		// Data from RFC 7049 appendix A
-		{"Shrink to float64", 1.0e+300, hexDecode("fb7e37e43c8800759c")},
+	func TestShortestFloat64(t *testing.T) {
+		testCases := []struct {
+			name         string
+			f64          float64
+			wantCborData []byte
+		}{
+			// Data from RFC 7049 appendix A
+			{"Shrink to float64", 0.0, hexDecode("fb0000000000000000")},
+			{"Shrink to float64", 1.0, hexDecode("fb3ff0000000000000")},
+			{"Shrink to float64", 1.5, hexDecode("fb3ff8000000000000")},
+			{"Shrink to float64", 65504.0, hexDecode("fb40effc0000000000")},
+			{"Shrink to float64", 5.960464477539063e-08, hexDecode("fb3e70000000000000")},
+			{"Shrink to float64", 6.103515625e-05, hexDecode("fb3f10000000000000")},
+			{"Shrink to float64", -4.0, hexDecode("fbc010000000000000")},
+			// Data from https://en.wikipedia.org/wiki/Half-precision_floating-point_format
+			{"Shrink to float64", 0.333251953125, hexDecode("fb3fd5540000000000")},
+			// Data from 7049bis 4.2.1 and 5.5
+			{"Shrink to float64", 5.5, hexDecode("fb4016000000000000")},
+			// Data from RFC 7049 appendix A
+			{"Shrink to float64", 100000.0, hexDecode("fb40f86a0000000000")},
+			{"Shrink to float64", 3.4028234663852886e+38, hexDecode("fb47efffffe0000000")},
+			// Data from 7049bis 4.2.1 and 5.5
+			{"Shrink to float64", 5555.5, hexDecode("fb40b5b38000000000")},
+			{"Shrink to float64", 1000000.5, hexDecode("fb412e848100000000")},
+			// Data from RFC 7049 appendix A
+			{"Shrink to float64", 1.0e+300, hexDecode("fb7e37e43c8800759c")},
+		}
+		em, err := EncOptions{ShortestFloat: ShortestFloat64}.EncMode()
+		if err != nil {
+			t.Errorf("EncMode() returned an error %v", err)
+		}
+		for _, tc := range testCases {
+			t.Run(tc.name, func(t *testing.T) {
+				b, err := em.Marshal(tc.f64)
+				if err != nil {
+					t.Errorf("Marshal(%v) returned error %v", tc.f64, err)
+				} else if !bytes.Equal(b, tc.wantCborData) {
+					t.Errorf("Marshal(%v) = 0x%x, want 0x%x", tc.f64, b, tc.wantCborData)
+				}
+				var f64 float64
+				if err = Unmarshal(b, &f64); err != nil {
+					t.Errorf("Unmarshal(0x%x) returned error %v", b, err)
+				} else if f64 != tc.f64 {
+					t.Errorf("Unmarshal(0x%x) = %f, want %f", b, f64, tc.f64)
+				}
+			})
+		}
 	}
-	em, err := EncOptions{ShortestFloat: ShortestFloat64}.EncMode()
-	if err != nil {
-		t.Errorf("EncMode() returned an error %v", err)
-	}
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			b, err := em.Marshal(tc.f64)
-			if err != nil {
-				t.Errorf("Marshal(%v) returned error %v", tc.f64, err)
-			} else if !bytes.Equal(b, tc.wantCborData) {
-				t.Errorf("Marshal(%v) = 0x%x, want 0x%x", tc.f64, b, tc.wantCborData)
-			}
-			var f64 float64
-			if err = Unmarshal(b, &f64); err != nil {
-				t.Errorf("Unmarshal(0x%x) returned error %v", b, err)
-			} else if f64 != tc.f64 {
-				t.Errorf("Unmarshal(0x%x) = %f, want %f", b, f64, tc.f64)
-			}
-		})
-	}
-}
 */
 func TestShortestFloatNone(t *testing.T) {
 	testCases := []struct {
