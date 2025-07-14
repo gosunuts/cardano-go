@@ -83,7 +83,6 @@ func (s *StakeCredential) MarshalCBOR() ([]byte, error) {
 	}
 
 	return cborEnc.Marshal(cred)
-
 }
 
 // UnmarshalCBOR implements cbor.Unmarshaler.

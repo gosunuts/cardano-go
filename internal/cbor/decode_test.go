@@ -5318,7 +5318,6 @@ type TestExample struct {
 }
 
 func TestUnmarshalToInterface(t *testing.T) {
-
 	uintFoo, uintFoo123 := UintFoo(0), UintFoo(123)
 	intFoo, intFooNeg1 := IntFoo(0), IntFoo(-1)
 	byteFoo, byteFoo123 := ByteFoo(nil), ByteFoo([]byte{1, 2, 3})
@@ -5401,7 +5400,6 @@ func TestUnmarshalToInterface(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-
 			data, err := em.Marshal(tc.v)
 			if err != nil {
 				t.Errorf("Marshal(%+v) returned error %v", tc.v, err)
@@ -5441,7 +5439,6 @@ type FooStruct struct {
 }
 
 func TestUnmarshalTaggedDataToInterface(t *testing.T) {
-
 	var tags = NewTagSet()
 	err := tags.Add(
 		TagOptions{EncTag: EncTagRequired, DecTag: DecTagRequired},
@@ -5618,7 +5615,6 @@ func TestDecModeInvalidDefaultMapType(t *testing.T) {
 }
 
 func TestUnmarshalToDefaultMapType(t *testing.T) {
-
 	cborDataMapIntInt := hexDecode("a201020304")                                             // {1: 2, 3: 4}
 	cborDataMapStringInt := hexDecode("a2616101616202")                                      // {"a": 1, "b": 2}
 	cborDataArrayOfMapStringint := hexDecode("82a2616101616202a2616303616404")               // [{"a": 1, "b": 2}, {"c": 3, "d": 4}]

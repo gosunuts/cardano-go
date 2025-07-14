@@ -140,7 +140,6 @@ func addMod256(x, y []byte) []byte {
 		r := uint16(xi) + uint16(y[i]) + carry
 		out[i] = byte(r)
 		carry = r >> 8
-
 	}
 
 	return out

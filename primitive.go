@@ -494,7 +494,7 @@ func NewHash28(h string) (Hash28, error) {
 	if err != nil {
 		return hash, err
 	}
-	copy(hash[:], b)
+	copy(hash, b)
 	return hash, nil
 }
 
@@ -512,7 +512,7 @@ func NewHash32(h string) (Hash32, error) {
 	if err != nil {
 		return hash, err
 	}
-	copy(hash[:], b)
+	copy(hash, b)
 	return hash, nil
 }
 

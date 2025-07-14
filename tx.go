@@ -75,7 +75,7 @@ type WitnessSet struct {
 	Scripts        []NativeScript `cbor:"1,keyasint,omitempty"`
 }
 
-// VKeyWitness is a witnesss that uses verification keys.
+// VKeyWitness is a witnesses that uses verification keys.
 type VKeyWitness struct {
 	_         struct{}      `cbor:",toarray"`
 	VKey      crypto.PubKey // ed25519 public key
