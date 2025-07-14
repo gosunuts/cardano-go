@@ -91,7 +91,7 @@ type Certificate struct {
 
 // MarshalCBOR implements cbor.Marshaler.
 func (c *Certificate) MarshalCBOR() ([]byte, error) {
-	var cert interface{}
+	var cert any
 	switch c.Type {
 	case StakeRegistration:
 		cert = stakeRegistration{
@@ -291,7 +291,7 @@ type Relay struct {
 
 // MarshalCBOR implements cbor.Marshaler.
 func (r *Relay) MarshalCBOR() ([]byte, error) {
-	var relay interface{}
+	var relay any
 	switch r.Type {
 	case SingleHostAddr:
 		relay = singleHostAddr{

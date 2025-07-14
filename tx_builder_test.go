@@ -361,7 +361,7 @@ func TestSendingMultiAssets(t *testing.T) {
 			txBuilder.Sign(policyKey.PrvKey())
 			txBuilder.AddAuxiliaryData(&AuxiliaryData{
 				Metadata: Metadata{
-					0: map[string]interface{}{
+					0: map[string]any{
 						"hello": "cardano-go",
 					},
 				},

@@ -96,7 +96,7 @@ func (ns *NativeScript) Bytes() ([]byte, error) {
 
 // MarshalCBOR implements cbor.Marshaler.
 func (ns *NativeScript) MarshalCBOR() ([]byte, error) {
-	var script []interface{}
+	var script []any
 	switch ns.Type {
 	case ScriptPubKey:
 		script = append(script, ns.Type, ns.KeyHash)

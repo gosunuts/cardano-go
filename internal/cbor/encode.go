@@ -90,7 +90,7 @@ import (
 //
 // Values of other types cannot be encoded in CBOR.  Attempting
 // to encode such a value causes Marshal to return an UnsupportedTypeError.
-func Marshal(v interface{}) ([]byte, error) {
+func Marshal(v any) ([]byte, error) {
 	return defaultEncMode.Marshal(v)
 }
 
@@ -482,7 +482,7 @@ func (opts EncOptions) encMode() (*encMode, error) {
 
 // EncMode is the main interface for CBOR encoding.
 type EncMode interface {
-	Marshal(v interface{}) ([]byte, error)
+	Marshal(v any) ([]byte, error)
 	NewEncoder(w io.Writer) *Encoder
 	EncOptions() EncOptions
 }
@@ -529,7 +529,7 @@ func (em *encMode) encTagBytes(t reflect.Type) []byte {
 // Marshal returns the CBOR encoding of v using em encoding mode.
 //
 // See the documentation for Marshal for details.
-func (em *encMode) Marshal(v interface{}) ([]byte, error) {
+func (em *encMode) Marshal(v any) ([]byte, error) {
 	e := getEncoderBuffer()
 
 	if err := encode(e, em, reflect.ValueOf(v)); err != nil {
@@ -556,7 +556,7 @@ type encoderBuffer struct {
 
 // encoderBufferPool caches unused encoderBuffer objects for later reuse.
 var encoderBufferPool = sync.Pool{
-	New: func() interface{} {
+	New: func() any {
 		e := new(encoderBuffer)
 		e.Grow(32) // TODO: make this configurable
 		return e
@@ -1301,10 +1301,10 @@ func getEncodeFuncInternal(t reflect.Type) (encodeFunc, isEmptyFunc) {
 	case typeByteString:
 		return encodeByteString, isEmptyByteString
 	}
-	if reflect.PtrTo(t).Implements(typeMarshaler) {
+	if reflect.PointerTo(t).Implements(typeMarshaler) {
 		return encodeMarshalerType, alwaysNotEmpty
 	}
-	if reflect.PtrTo(t).Implements(typeBinaryMarshaler) {
+	if reflect.PointerTo(t).Implements(typeBinaryMarshaler) {
 		return encodeBinaryMarshalerType, isEmptyBinaryMarshaler
 	}
 	switch k {

@@ -46,6 +46,9 @@ func (w *Wallet) Transfer(receiver cardano.Address, amount *cardano.Value) (*car
 	// Find utxos that cover the amount to transfer
 	pickedUtxos := []cardano.UTxO{}
 	utxos, err := w.findUtxos()
+	if err != nil {
+		return nil, err
+	}
 	pickedUtxosAmount := cardano.NewValue(0)
 	for _, utxo := range utxos {
 		if pickedUtxosAmount.Cmp(amount) == 1 {

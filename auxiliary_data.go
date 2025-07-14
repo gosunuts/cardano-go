@@ -7,13 +7,13 @@ import (
 )
 
 // Metadata represents the transaction metadata.
-type Metadata map[uint]interface{}
+type Metadata map[uint]any
 
 // AuxiliaryData is the auxiliary data in the transaction.
 type AuxiliaryData struct {
-	Metadata      Metadata    `cbor:"0,keyasint,omitempty"`
-	NativeScripts interface{} `cbor:"1,keyasint,omitempty"`
-	PlutusScripts interface{} `cbor:"2,keyasint,omitempty"`
+	Metadata      Metadata `cbor:"0,keyasint,omitempty"`
+	NativeScripts any      `cbor:"1,keyasint,omitempty"`
+	PlutusScripts any      `cbor:"2,keyasint,omitempty"`
 }
 
 // MarshalCBOR implements cbor.Marshaler
@@ -60,7 +60,7 @@ func (d *AuxiliaryData) UnmarshalCBOR(data []byte) error {
 	return nil
 }
 
-func (d *AuxiliaryData) tagSet(contentType interface{}) (cbor.TagSet, error) {
+func (d *AuxiliaryData) tagSet(contentType any) (cbor.TagSet, error) {
 	tags := cbor.NewTagSet()
 	err := tags.Add(
 		cbor.TagOptions{EncTag: cbor.EncTagRequired, DecTag: cbor.DecTagRequired},

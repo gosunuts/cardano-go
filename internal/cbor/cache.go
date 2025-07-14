@@ -58,17 +58,18 @@ func newTypeInfo(t reflect.Type) *typeInfo {
 	tInfo.nonPtrType = t
 	tInfo.nonPtrKind = k
 
-	if k == reflect.Interface {
+	switch {
+	case k == reflect.Interface:
 		if t.NumMethod() == 0 {
 			tInfo.spclType = specialTypeEmptyIface
 		} else {
 			tInfo.spclType = specialTypeIface
 		}
-	} else if t == typeTag {
+	case t == typeTag:
 		tInfo.spclType = specialTypeTag
-	} else if t == typeTime {
+	case t == typeTime:
 		tInfo.spclType = specialTypeTime
-	} else if reflect.PtrTo(t).Implements(typeUnmarshaler) {
+	case reflect.PointerTo(t).Implements(typeUnmarshaler):
 		tInfo.spclType = specialTypeUnmarshalerIface
 	}
 
@@ -99,7 +100,7 @@ func getDecodingStructType(t reflect.Type) *decodingStructType {
 	toArray := hasToArrayOption(structOptions)
 
 	var err error
-	for i := 0; i < len(flds); i++ {
+	for i := range flds {
 		if flds[i].keyAsInt {
 			nameAsInt, numErr := strconv.Atoi(flds[i].name)
 			if numErr != nil {
@@ -190,7 +191,7 @@ func getEncodingStructType(t reflect.Type) (*encodingStructType, error) {
 	var omitEmptyIdx []int
 	fixedLength := true
 	e := getEncoderBuffer()
-	for i := 0; i < len(flds); i++ {
+	for i := range flds {
 		// Get field's encodeFunc
 		flds[i].ef, flds[i].ief = getEncodeFunc(flds[i].typ)
 		if flds[i].ef == nil {
@@ -270,7 +271,7 @@ func getEncodingStructType(t reflect.Type) (*encodingStructType, error) {
 }
 
 func getEncodingStructToArrayType(t reflect.Type, flds fields) (*encodingStructType, error) {
-	for i := 0; i < len(flds); i++ {
+	for i := range flds {
 		// Get field's encodeFunc
 		flds[i].ef, flds[i].ief = getEncodeFunc(flds[i].typ)
 		if flds[i].ef == nil {

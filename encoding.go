@@ -10,7 +10,7 @@ var cborEnc, _ = cbor.CanonicalEncOptions().EncMode()
 var cborDec, _ = cbor.DecOptions{MapKeyByteString: cbor.MapKeyByteStringWrap}.DecMode()
 
 func getTypeFromCBORArray(data []byte) (uint64, error) {
-	raw := []interface{}{}
+	raw := []any{}
 	if err := cborDec.Unmarshal(data, &raw); err != nil {
 		return 0, err
 	}

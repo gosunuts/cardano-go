@@ -22,7 +22,7 @@ func TestDecoder(t *testing.T) {
 	bytesRead := 0
 	for i := 0; i < 5; i++ {
 		for _, tc := range unmarshalTests {
-			var v interface{}
+			var v any
 			if err := decoder.Decode(&v); err != nil {
 				t.Fatalf("Decode() returned error %v", err)
 			}
@@ -40,7 +40,7 @@ func TestDecoder(t *testing.T) {
 		}
 	}
 	// no more data
-	var v interface{}
+	var v any
 	err := decoder.Decode(&v)
 	if v != nil {
 		t.Errorf("Decode() = %v (%T), want nil (no more data)", v, v)
@@ -75,7 +75,7 @@ func TestDecoderUnmarshalTypeError(t *testing.T) {
 					t.Errorf("NumBytesRead() = %v, want %v", decoder.NumBytesRead(), bytesRead)
 				}
 
-				var vi interface{}
+				var vi any
 				if err := decoder.Decode(&vi); err != nil {
 					t.Errorf("Decode() returned error %v", err)
 				}
@@ -94,7 +94,7 @@ func TestDecoderUnmarshalTypeError(t *testing.T) {
 		}
 	}
 	// no more data
-	var v interface{}
+	var v any
 	err := decoder.Decode(&v)
 	if v != nil {
 		t.Errorf("Decode() = %v (%T), want nil (no more data)", v, v)
@@ -152,7 +152,7 @@ func TestEncoder(t *testing.T) {
 func TestEncoderError(t *testing.T) {
 	testcases := []struct {
 		name         string
-		value        interface{}
+		value        any
 		wantErrorMsg string
 	}{
 		{"channel cannot be marshaled", make(chan bool), "cbor: unsupported type: chan bool"},

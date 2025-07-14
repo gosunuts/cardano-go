@@ -25,7 +25,7 @@ func NewClient(opts *Options) *Client {
 
 // Close closes all the resources used by the Client.
 func (c *Client) Close() {
-	c.opts.DB.Close()
+	_ = c.opts.DB.Close()
 }
 
 // CreateWallet creates a new Wallet using a secure entropy and password,

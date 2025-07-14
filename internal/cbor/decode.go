@@ -46,8 +46,8 @@ import (
 //	CBOR floating points decode to float64.
 //	CBOR byte strings decode to []byte.
 //	CBOR text strings decode to string.
-//	CBOR arrays decode to []interface{}.
-//	CBOR maps decode to map[interface{}]interface{}.
+//	CBOR arrays decode to []any.
+//	CBOR maps decode to map[any]any.
 //	CBOR null and undefined values decode to nil.
 //	CBOR times (tag 0 and 1) decode to time.Time.
 //	CBOR bignums (tag 2 and 3) decode to big.Int.
@@ -95,7 +95,7 @@ import (
 //
 // Unmarshal supports CBOR tag 55799 (self-describe CBOR), tag 0 and 1 (time),
 // and tag 2 and 3 (bignum).
-func Unmarshal(data []byte, v interface{}) error {
+func Unmarshal(data []byte, v any) error {
 	return defaultDecMode.Unmarshal(data, v)
 }
 
@@ -143,7 +143,7 @@ func (e *UnmarshalTypeError) Error() string {
 
 // DupMapKeyError describes detected duplicate map key in CBOR map.
 type DupMapKeyError struct {
-	Key   interface{}
+	Key   any
 	Index int
 }
 
@@ -218,16 +218,16 @@ func (tm TagsMode) valid() bool {
 }
 
 // IntDecMode specifies which Go int type (int64 or uint64) should
-// be used when decoding CBOR int (major type 0 and 1) to Go interface{}.
+// be used when decoding CBOR int (major type 0 and 1) to Go any.
 type IntDecMode int
 
 const (
-	// IntDecConvertNone affects how CBOR int (major type 0 and 1) decodes to Go interface{}.
+	// IntDecConvertNone affects how CBOR int (major type 0 and 1) decodes to Go any.
 	// It makes CBOR positive int (major type 0) decode to uint64 value, and
 	// CBOR negative int (major type 1) decode to int64 value.
 	IntDecConvertNone IntDecMode = iota
 
-	// IntDecConvertSigned affects how CBOR int (major type 0 and 1) decodes to Go interface{}.
+	// IntDecConvertSigned affects how CBOR int (major type 0 and 1) decodes to Go any.
 	// It makes CBOR positive/negative int (major type 0 and 1) decode to int64 value.
 	// If value overflows int64, UnmarshalTypeError is returned.
 	IntDecConvertSigned
@@ -305,7 +305,7 @@ type DecOptions struct {
 	TagsMd TagsMode
 
 	// IntDec specifies which Go integer type (int64 or uint64) to use
-	// when decoding CBOR int (major type 0 and 1) to Go interface{}.
+	// when decoding CBOR int (major type 0 and 1) to Go any.
 	IntDec IntDecMode
 
 	// MapKeyByteString specifies whether to use a wrapper object for byte strings.
@@ -316,7 +316,7 @@ type DecOptions struct {
 
 	// DefaultMapType specifies Go map type to create and decode to
 	// when unmarshalling CBOR into an empty interface value.
-	// By default, unmarshal uses map[interface{}]interface{}.
+	// By default, unmarshal uses map[any]any.
 	DefaultMapType reflect.Type
 }
 
@@ -446,7 +446,7 @@ type DecMode interface {
 	// Unmarshal returns an error.
 	//
 	// See the documentation for Unmarshal for details.
-	Unmarshal(data []byte, v interface{}) error
+	Unmarshal(data []byte, v any) error
 	// Valid checks whether the CBOR data is complete and well-formed.
 	Valid(data []byte) error
 	// NewDecoder returns a new decoder that reads from r using dm DecMode.
@@ -493,7 +493,7 @@ func (dm *decMode) DecOptions() DecOptions {
 // Unmarshal returns an error.
 //
 // See the documentation for Unmarshal for details.
-func (dm *decMode) Unmarshal(data []byte, v interface{}) error {
+func (dm *decMode) Unmarshal(data []byte, v any) error {
 	d := decoder{data: data, dm: dm}
 	return d.value(v)
 }
@@ -515,7 +515,7 @@ type decoder struct {
 	dm   *decMode
 }
 
-func (d *decoder) value(v interface{}) error {
+func (d *decoder) value(v any) error {
 	// v can't be nil, non-pointer, or nil pointer value.
 	if v == nil {
 		return &InvalidUnmarshalError{"cbor: Unmarshal(nil)"}
@@ -582,29 +582,28 @@ const (
 // and does not perform bounds checking.
 func (d *decoder) parseToValue(v reflect.Value, tInfo *typeInfo) error { //nolint:gocyclo
 	if tInfo.spclType == specialTypeIface {
-		if !v.IsNil() {
+		switch {
+		case !v.IsNil():
 			// Use value type
 			v = v.Elem()
 			tInfo = getTypeInfo(v.Type())
-		} else {
 			// Create and use registered type if CBOR data is registered tag
-			if d.dm.tags != nil && d.nextCBORType() == cborTypeTag {
-				off := d.off
-				var tagNums []uint64
-				for d.nextCBORType() == cborTypeTag {
-					_, _, tagNum := d.getHead()
-					tagNums = append(tagNums, tagNum)
-				}
-				d.off = off
+		case d.dm.tags != nil && d.nextCBORType() == cborTypeTag:
+			off := d.off
+			var tagNums []uint64
+			for d.nextCBORType() == cborTypeTag {
+				_, _, tagNum := d.getHead()
+				tagNums = append(tagNums, tagNum)
+			}
+			d.off = off
 
-				registeredType := d.dm.tags.getTypeFromTagNum(tagNums)
-				if registeredType != nil {
-					if registeredType.Implements(tInfo.nonPtrType) ||
-						reflect.PtrTo(registeredType).Implements(tInfo.nonPtrType) {
-						v.Set(reflect.New(registeredType))
-						v = v.Elem()
-						tInfo = getTypeInfo(registeredType)
-					}
+			registeredType := d.dm.tags.getTypeFromTagNum(tagNums)
+			if registeredType != nil {
+				if registeredType.Implements(tInfo.nonPtrType) ||
+					reflect.PointerTo(registeredType).Implements(tInfo.nonPtrType) {
+					v.Set(reflect.New(registeredType))
+					v = v.Elem()
+					tInfo = getTypeInfo(registeredType)
 				}
 			}
 		}
@@ -804,19 +803,21 @@ func (d *decoder) parseToValue(v reflect.Value, tInfo *typeInfo) error { //nolin
 		}
 		return d.parseToValue(v, tInfo)
 	case cborTypeArray:
-		if tInfo.nonPtrKind == reflect.Slice {
+		switch tInfo.nonPtrKind {
+		case reflect.Slice:
 			return d.parseArrayToSlice(v, tInfo)
-		} else if tInfo.nonPtrKind == reflect.Array {
+		case reflect.Array:
 			return d.parseArrayToArray(v, tInfo)
-		} else if tInfo.nonPtrKind == reflect.Struct {
+		case reflect.Struct:
 			return d.parseArrayToStruct(v, tInfo)
 		}
 		d.skip()
 		return &UnmarshalTypeError{CBORType: t.String(), GoType: tInfo.nonPtrType.String()}
 	case cborTypeMap:
-		if tInfo.nonPtrKind == reflect.Struct {
+		switch tInfo.nonPtrKind {
+		case reflect.Struct:
 			return d.parseMapToStruct(v, tInfo)
-		} else if tInfo.nonPtrKind == reflect.Map {
+		case reflect.Map:
 			return d.parseMapToMap(v, tInfo)
 		}
 		d.skip()
@@ -879,7 +880,7 @@ func (d *decoder) parseToTime() (tm time.Time, err error) {
 		}
 	}
 
-	var content interface{}
+	var content any
 	content, err = d.parse(false)
 	if err != nil {
 		return
@@ -934,7 +935,7 @@ func (d *decoder) parseToUnmarshaler(v reflect.Value) error {
 
 // parse parses CBOR data and returns value in default Go type.
 // It assumes data is well-formed, and does not perform bounds checking.
-func (d *decoder) parse(skipSelfDescribedTag bool) (interface{}, error) { //nolint:gocyclo
+func (d *decoder) parse(skipSelfDescribedTag bool) (any, error) { //nolint:gocyclo
 	// Strip self-described CBOR tag number.
 	if skipSelfDescribedTag {
 		for d.nextCBORType() == cborTypeTag {
@@ -1124,15 +1125,15 @@ func (d *decoder) parseTextString() ([]byte, error) {
 	return b, nil
 }
 
-func (d *decoder) parseArray() ([]interface{}, error) {
+func (d *decoder) parseArray() ([]any, error) {
 	_, ai, val := d.getHead()
 	hasSize := (ai != 31)
 	count := int(val)
 	if !hasSize {
 		count = d.numOfItemsUntilBreak() // peek ahead to get array size to preallocate slice for better performance
 	}
-	v := make([]interface{}, count)
-	var e interface{}
+	v := make([]any, count)
+	var e any
 	var err, lastErr error
 	for i := 0; (hasSize && i < count) || (!hasSize && !d.foundBreak()); i++ {
 		if e, lastErr = d.parse(true); lastErr != nil {
@@ -1198,12 +1199,12 @@ func (d *decoder) parseArrayToArray(v reflect.Value, tInfo *typeInfo) error {
 	return err
 }
 
-func (d *decoder) parseMap() (interface{}, error) {
+func (d *decoder) parseMap() (any, error) {
 	_, ai, val := d.getHead()
 	hasSize := (ai != 31)
 	count := int(val)
-	m := make(map[interface{}]interface{})
-	var k, e interface{}
+	m := make(map[any]any)
+	var k, e any
 	var err, lastErr error
 	keyCount := 0
 	typeByteSlice := reflect.TypeOf([]byte{})
@@ -1277,13 +1278,13 @@ func (d *decoder) parseMapToMap(v reflect.Value, tInfo *typeInfo) error { //noli
 	keyType, eleType := tInfo.keyTypeInfo.typ, tInfo.elemTypeInfo.typ
 	reuseKey, reuseEle := isImmutableKind(tInfo.keyTypeInfo.kind), isImmutableKind(tInfo.elemTypeInfo.kind)
 	var keyValue, eleValue, zeroKeyValue, zeroEleValue reflect.Value
-	keyIsInterfaceType := keyType == typeIntf // If key type is interface{}, need to check if key value is hashable.
+	keyIsInterfaceType := keyType == typeIntf // If key type is any, need to check if key value is hashable.
 	var err, lastErr error
 	keyCount := v.Len()
 	typeByteSlice := reflect.TypeOf([]byte{})
-	var existingKeys map[interface{}]bool // Store existing map keys, used for detecting duplicate map key.
+	var existingKeys map[any]bool // Store existing map keys, used for detecting duplicate map key.
 	if d.dm.dupMapKey == DupMapKeyEnforcedAPF {
-		existingKeys = make(map[interface{}]bool, keyCount)
+		existingKeys = make(map[any]bool, keyCount)
 		if keyCount > 0 {
 			vKeys := v.MapKeys()
 			for i := 0; i < len(vKeys); i++ {
@@ -1473,19 +1474,20 @@ func (d *decoder) parseMapToStruct(v reflect.Value, tInfo *typeInfo) error { //n
 
 	// Keeps track of CBOR map keys to detect duplicate map key
 	keyCount := 0
-	var mapKeys map[interface{}]struct{}
+	var mapKeys map[any]struct{}
 	if d.dm.dupMapKey == DupMapKeyEnforcedAPF {
-		mapKeys = make(map[interface{}]struct{}, len(structType.fields))
+		mapKeys = make(map[any]struct{}, len(structType.fields))
 	}
 
 	errOnUnknownField := (d.dm.extraReturnErrors & ExtraDecErrorUnknownField) > 0
 
 	for j := 0; (hasSize && j < count) || (!hasSize && !d.foundBreak()); j++ {
 		var f *field
-		var k interface{} // Used by duplicate map key detection
+		var k any // Used by duplicate map key detection
 
 		t := d.nextCBORType()
-		if t == cborTypeTextString {
+		switch {
+		case t == cborTypeTextString:
 			var keyBytes []byte
 			keyBytes, lastErr = d.parseTextString()
 			if lastErr != nil {
@@ -1522,7 +1524,7 @@ func (d *decoder) parseMapToStruct(v reflect.Value, tInfo *typeInfo) error { //n
 			if d.dm.dupMapKey == DupMapKeyEnforcedAPF {
 				k = string(keyBytes)
 			}
-		} else if t <= cborTypeNegativeInt { // uint/int
+		case t <= cborTypeNegativeInt: // uint/int
 			var nameAsInt int64
 
 			if t == cborTypePositiveInt {
@@ -1557,7 +1559,7 @@ func (d *decoder) parseMapToStruct(v reflect.Value, tInfo *typeInfo) error { //n
 			if d.dm.dupMapKey == DupMapKeyEnforcedAPF {
 				k = nameAsInt
 			}
-		} else {
+		default:
 			if err == nil {
 				err = &UnmarshalTypeError{
 					CBORType: t.String(),
@@ -1637,14 +1639,12 @@ func (d *decoder) parseMapToStruct(v reflect.Value, tInfo *typeInfo) error { //n
 			}
 		}
 
-		if lastErr = d.parseToValue(fv, f.typInfo); lastErr != nil {
-			if err == nil {
-				if typeError, ok := lastErr.(*UnmarshalTypeError); ok {
-					typeError.StructFieldName = tInfo.nonPtrType.String() + "." + f.name
-					err = typeError
-				} else {
-					err = lastErr
-				}
+		if lastErr = d.parseToValue(fv, f.typInfo); lastErr != nil && err == nil {
+			if typeError, ok := lastErr.(*UnmarshalTypeError); ok {
+				typeError.StructFieldName = tInfo.nonPtrType.String() + "." + f.name
+				err = typeError
+			} else {
+				err = lastErr
 			}
 		}
 	}
@@ -1775,7 +1775,7 @@ func (d *decoder) nextCBORNil() bool {
 }
 
 var (
-	typeIntf              = reflect.TypeOf([]interface{}(nil)).Elem()
+	typeIntf              = reflect.TypeOf([]any(nil)).Elem()
 	typeTime              = reflect.TypeOf(time.Time{})
 	typeBigInt            = reflect.TypeOf(big.Int{})
 	typeUnmarshaler       = reflect.TypeOf((*Unmarshaler)(nil)).Elem()
@@ -1883,7 +1883,7 @@ func fillFloat(t cborType, val float64, v reflect.Value) error {
 }
 
 func fillByteString(t cborType, val []byte, v reflect.Value) error {
-	if reflect.PtrTo(v.Type()).Implements(typeBinaryUnmarshaler) {
+	if reflect.PointerTo(v.Type()).Implements(typeBinaryUnmarshaler) {
 		if v.CanAddr() {
 			v = v.Addr()
 			if u, ok := v.Interface().(encoding.BinaryUnmarshaler); ok {
