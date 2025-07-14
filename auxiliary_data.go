@@ -3,7 +3,7 @@ package cardano
 import (
 	"reflect"
 
-	"github.com/echovl/cardano-go/internal/cbor"
+	"github.com/cryptogarageinc/cardano-go/internal/cbor"
 )
 
 // Metadata represents the transaction metadata.
