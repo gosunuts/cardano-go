@@ -1639,14 +1639,12 @@ func (d *decoder) parseMapToStruct(v reflect.Value, tInfo *typeInfo) error { //n
 			}
 		}
 
-		if lastErr = d.parseToValue(fv, f.typInfo); lastErr != nil {
-			if err == nil {
-				if typeError, ok := lastErr.(*UnmarshalTypeError); ok {
-					typeError.StructFieldName = tInfo.nonPtrType.String() + "." + f.name
-					err = typeError
-				} else {
-					err = lastErr
-				}
+		if lastErr = d.parseToValue(fv, f.typInfo); lastErr != nil && err == nil {
+			if typeError, ok := lastErr.(*UnmarshalTypeError); ok {
+				typeError.StructFieldName = tInfo.nonPtrType.String() + "." + f.name
+				err = typeError
+			} else {
+				err = lastErr
 			}
 		}
 	}

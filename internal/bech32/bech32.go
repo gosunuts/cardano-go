@@ -47,7 +47,7 @@ func bech32Polymod(hrp string, values, checksum []byte) int {
 		b := chk >> 25
 		hiBits := int(hrp[i]) >> 5
 		chk = (chk&0x1ffffff)<<5 ^ hiBits
-		for i := 0; i < 5; i++ {
+		for i := range 5 {
 			if (b>>uint(i))&1 == 1 {
 				chk ^= gen[i]
 			}
@@ -58,7 +58,7 @@ func bech32Polymod(hrp string, values, checksum []byte) int {
 	// x^0 == x, so we eliminate the redundant xor used in the other rounds.
 	b := chk >> 25
 	chk = (chk & 0x1ffffff) << 5
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		if (b>>uint(i))&1 == 1 {
 			chk ^= gen[i]
 		}
@@ -69,7 +69,7 @@ func bech32Polymod(hrp string, values, checksum []byte) int {
 		b := chk >> 25
 		loBits := int(hrp[i]) & 31
 		chk = (chk&0x1ffffff)<<5 ^ loBits
-		for i := 0; i < 5; i++ {
+		for i := range 5 {
 			if (b>>uint(i))&1 == 1 {
 				chk ^= gen[i]
 			}
@@ -80,7 +80,7 @@ func bech32Polymod(hrp string, values, checksum []byte) int {
 	for _, v := range values {
 		b := chk >> 25
 		chk = (chk&0x1ffffff)<<5 ^ int(v)
-		for i := 0; i < 5; i++ {
+		for i := range 5 {
 			if (b>>uint(i))&1 == 1 {
 				chk ^= gen[i]
 			}
@@ -90,10 +90,10 @@ func bech32Polymod(hrp string, values, checksum []byte) int {
 	if checksum == nil {
 		// A nil checksum is used during encoding, so assume all bytes are zero.
 		// x^0 == x, so we eliminate the redundant xor used in the other rounds.
-		for v := 0; v < 6; v++ {
+		for range 6 {
 			b := chk >> 25
 			chk = (chk & 0x1ffffff) << 5
-			for i := 0; i < 5; i++ {
+			for i := range 5 {
 				if (b>>uint(i))&1 == 1 {
 					chk ^= gen[i]
 				}
@@ -104,7 +104,7 @@ func bech32Polymod(hrp string, values, checksum []byte) int {
 		for _, v := range checksum {
 			b := chk >> 25
 			chk = (chk&0x1ffffff)<<5 ^ int(v)
-			for i := 0; i < 5; i++ {
+			for i := range 5 {
 				if (b>>uint(i))&1 == 1 {
 					chk ^= gen[i]
 				}
@@ -126,7 +126,7 @@ func bech32Polymod(hrp string, values, checksum []byte) int {
 // For more details on the checksum calculation, please refer to BIP 173.
 func writeBech32Checksum(hrp string, data []byte, bldr *strings.Builder) {
 	polymod := bech32Polymod(hrp, data, nil) ^ 1
-	for i := 0; i < 6; i++ {
+	for i := range 6 {
 		b := byte((polymod >> uint(5*(5-i))) & 31)
 
 		// This can't fail, given we explicitly cap the previous b byte by the
