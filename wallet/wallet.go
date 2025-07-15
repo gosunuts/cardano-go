@@ -12,13 +12,8 @@ import (
 )
 
 const (
-	entropySizeInBits         = 160
-	purposeIndex       uint32 = 1852 + 0x80000000
-	coinTypeIndex      uint32 = 1815 + 0x80000000
-	accountIndex       uint32 = 0x80000000
-	externalChainIndex uint32 = 0x0
-	stakingChainIndex  uint32 = 0x02
-	walleIDAlphabet           = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+	entropySizeInBits = 160
+	walleIDAlphabet   = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 )
 
 type Wallet struct {
@@ -40,7 +35,7 @@ func (w *Wallet) Transfer(receiver cardano.Address, amount *cardano.Value) (*car
 	}
 
 	if cmp := balance.Cmp(amount); cmp == -1 || cmp == 2 {
-		return nil, fmt.Errorf("Not enough balance, %v > %v", amount, balance)
+		return nil, fmt.Errorf("not enough balance, %v > %v", amount, balance)
 	}
 
 	// Find utxos that cover the amount to transfer
@@ -180,11 +175,11 @@ func newWalletID() string {
 func newWallet(name, password string, entropy []byte) *Wallet {
 	wallet := &Wallet{Name: name, ID: newWalletID()}
 	rootKey := crypto.NewXPrvKeyFromEntropy(entropy, password)
-	accountKey := rootKey.Derive(purposeIndex).
-		Derive(coinTypeIndex).
-		Derive(accountIndex)
-	chainKey := accountKey.Derive(externalChainIndex)
-	stakeKey := accountKey.Derive(2).Derive(0)
+	accountKey := rootKey.Derive(cardano.PurposeBip44Ed25519).
+		Derive(cardano.CoinTypeBip44Ed25519).
+		Derive(cardano.AccountBase)
+	chainKey := accountKey.Derive(cardano.ExternalChainRole)
+	stakeKey := accountKey.Derive(cardano.StakingRole).Derive(0)
 	addr0Key := chainKey.Derive(0)
 	wallet.rootKey = chainKey
 	wallet.addrKeys = []crypto.XPrvKey{addr0Key}
