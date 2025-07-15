@@ -59,6 +59,16 @@ func NewScriptCredential(script []byte) (StakeCredential, error) {
 	return StakeCredential{Type: ScriptCredential, ScriptHash: scriptHash}, nil
 }
 
+// NewKeyCredentialWithHash creates a Key Credential with hash.
+func NewKeyCredentialWithHash(keyHash []byte) StakeCredential {
+	return StakeCredential{Type: KeyCredential, KeyHash: keyHash}
+}
+
+// NewKeyCredential creates a Script Credential with hash.
+func NewScriptCredentialWithHash(scriptHash []byte) StakeCredential {
+	return StakeCredential{Type: ScriptCredential, ScriptHash: scriptHash}
+}
+
 // Equal returns true if the credentials are equal.
 func (s *StakeCredential) Equal(rhs StakeCredential) bool {
 	if s.Type != rhs.Type {

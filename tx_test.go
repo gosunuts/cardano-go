@@ -8,6 +8,9 @@ import (
 
 	"github.com/cryptogarageinc/cardano-go/crypto"
 	"github.com/cryptogarageinc/cardano-go/internal/cbor"
+
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
 func TestTxEncoding(t *testing.T) {
@@ -85,6 +88,12 @@ func TestTxEncoding(t *testing.T) {
 		txInput.Amount = nil
 	}
 
+	if diff := cmp.Diff(
+		wantTx, gotTx,
+		cmpopts.IgnoreUnexported(MultiAsset{}, Mint{}),
+	); diff != "" {
+		t.Error(diff)
+	}
 	if !reflect.DeepEqual(wantTx, gotTx) {
 		t.Errorf("invalid tx body encoding:\ngot: %+v\nwant: %+v", gotTx, wantTx)
 	}
