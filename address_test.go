@@ -19,6 +19,8 @@ const (
 	addrType5  = "addr128phkx6acpnf78fuvxn0mkew3l0fd058hzquvz7w36x4gtupnz75xxcrtw79hu"
 	addrType6  = "addr1vx2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzers66hrl8"
 	addrType7  = "addr1w8phkx6acpnf78fuvxn0mkew3l0fd058hzquvz7w36x4gtcyjy7wx"
+	addrType14 = "stake1uyehkck0lajq8gr28t9uxnuvgcqrc6070x3k9r8048z8y5gh6ffgw"
+	addrType15 = "stake178phkx6acpnf78fuvxn0mkew3l0fd058hzquvz7w36x4gtcccycj5"
 )
 
 var (
@@ -31,6 +33,8 @@ var (
 		"addr128phkx6acpnf78fuvxn0mkew3l0fd058hzquvz7w36x4gtupnz75xxcrtw79hu",
 		"addr1vx2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzers66hrl8",
 		"addr1w8phkx6acpnf78fuvxn0mkew3l0fd058hzquvz7w36x4gtcyjy7wx",
+		"stake1uyehkck0lajq8gr28t9uxnuvgcqrc6070x3k9r8048z8y5gh6ffgw",
+		"stake178phkx6acpnf78fuvxn0mkew3l0fd058hzquvz7w36x4gtcccycj5",
 	}
 )
 
@@ -139,6 +143,22 @@ func TestNewAddress(t *testing.T) {
 	}
 	if got, want := enterprise1.Bech32(), addrType7; got != want {
 		t.Errorf("invalid enterprise address\ngot: %s\nwant: %s", got, want)
+	}
+
+	stake0, err := NewStakeAddress(Mainnet, stakeAddrCred)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got, want := stake0.Bech32(), addrType14; got != want {
+		t.Errorf("invalid stake address\ngot: %s\nwant: %s", got, want)
+	}
+
+	stake1, err := NewStakeAddress(Mainnet, scriptCred)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got, want := stake1.Bech32(), addrType15; got != want {
+		t.Errorf("invalid stake address\ngot: %s\nwant: %s", got, want)
 	}
 }
 

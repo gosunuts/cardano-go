@@ -22,6 +22,14 @@ linters:
       - linters:
           - dogsled
         source: "runtime\\.Caller\\("
+      - path: internal/bech32
+        text: "cognitive complexity"
+        linters:
+          - gocognit
+      - path: internal/cbor
+        text: "cognitive complexity"
+        linters:
+          - gocognit
   enable:
     - copyloopvar
     - dogsled
