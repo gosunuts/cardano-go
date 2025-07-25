@@ -18,10 +18,10 @@ install:
 	@cp ./cli/build/cwallet /usr/bin/
 
 test:
-	$(GOTEST) ./...
+	$(GOTEST) -short ./...
 
 testcov:
-	$(GOTEST) ./... -coverprofile coverage.out
+	$(GOTEST) -short ./... -coverprofile coverage.out
 
 opencov:
 	go tool cover -html coverage.out
