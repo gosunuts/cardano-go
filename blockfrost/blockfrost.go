@@ -5,20 +5,24 @@ import (
 	"context"
 	"encoding/hex"
 	"errors"
-	"fmt"
 	"io"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/blockfrost/blockfrost-go"
 	"github.com/cryptogarageinc/cardano-go"
 )
+
+const defaultTimeLimit = time.Hour
 
 // BlockfrostNode implements Node using the blockfrost API.
 type BlockfrostNode struct {
 	client    blockfrost.APIClient
 	projectID string
 	network   cardano.Network
+	server    string
+	timeLimit *time.Duration
 }
 
 // NewNode returns a new instance of BlockfrostNode.
@@ -28,13 +32,13 @@ func NewNode(network cardano.Network, projectID string) cardano.Node {
 	case cardano.Testnet:
 		server = blockfrost.CardanoTestNet
 	case cardano.Preprod:
-		// We hardcode the preprod url here until blockfrost supports Preprod type.
-		server = "https://cardano-preprod.blockfrost.io/api/v0"
+		server = blockfrost.CardanoPreProd
 	}
 
 	return &BlockfrostNode{
 		network:   network,
 		projectID: projectID,
+		server:    server,
 		client: blockfrost.NewAPIClient(blockfrost.APIClientOptions{
 			ProjectID: projectID,
 			Server:    server,
@@ -42,8 +46,15 @@ func NewNode(network cardano.Network, projectID string) cardano.Node {
 	}
 }
 
+func (b *BlockfrostNode) WithTimeLimit(timeLimit time.Duration) *BlockfrostNode {
+	b.timeLimit = &timeLimit
+	return b
+}
+
 func (b *BlockfrostNode) UTxOs(addr cardano.Address) ([]cardano.UTxO, error) {
-	butxos, err := b.client.AddressUTXOs(context.Background(), addr.Bech32(), blockfrost.APIQueryParams{})
+	ctx, cancel := context.WithTimeout(context.Background(), b.TimeLimit())
+	defer cancel()
+	butxos, err := b.addressUTXOsAll(ctx, addr.Bech32(), blockfrost.APIQueryParams{})
 	if err != nil {
 		// Addresses without UTXOs return NotFound error
 		if err, ok := err.(*blockfrost.APIError); ok {
@@ -111,6 +122,27 @@ func (b *BlockfrostNode) UTxOs(addr cardano.Address) ([]cardano.UTxO, error) {
 	return utxos, nil
 }
 
+func (b *BlockfrostNode) addressUTXOsAll(ctx context.Context, address string, queryParams blockfrost.APIQueryParams) ([]blockfrost.AddressUTXO, error) {
+	result := make([]blockfrost.AddressUTXO, 0, 100)
+
+	for page := 0; ; page++ {
+		query := queryParams
+		query.Count = 100
+		query.Page = page
+		utxo, err := b.client.AddressUTXOs(ctx, address, query)
+		switch {
+		case err != nil:
+			return nil, err
+		case len(utxo) == 0:
+			return result, nil
+		}
+		result = append(result, utxo...)
+		if len(utxo) != query.Count {
+			return result, nil
+		}
+	}
+}
+
 func (b *BlockfrostNode) Tip() (*cardano.NodeTip, error) {
 	block, err := b.client.BlockLatest(context.Background())
 	if err != nil {
@@ -125,7 +157,7 @@ func (b *BlockfrostNode) Tip() (*cardano.NodeTip, error) {
 }
 
 func (b *BlockfrostNode) SubmitTx(tx *cardano.Tx) (*cardano.Hash32, error) {
-	url := fmt.Sprintf("https://cardano-%s.blockfrost.io/api/v0/tx/submit", b.network.String())
+	url := b.server + "/tx/submit"
 	txBytes := tx.Bytes()
 
 	req, err := http.NewRequest("POST", url, bytes.NewReader(txBytes))
@@ -197,4 +229,11 @@ func (b *BlockfrostNode) ProtocolParams() (*cardano.ProtocolParams, error) {
 
 func (b *BlockfrostNode) Network() cardano.Network {
 	return b.network
+}
+
+func (b *BlockfrostNode) TimeLimit() time.Duration {
+	if b.timeLimit == nil {
+		return defaultTimeLimit
+	}
+	return *b.timeLimit
 }
