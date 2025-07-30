@@ -54,7 +54,6 @@ func (h *keyCmdHandler) getXprivCmd(_ context.Context) *cobra.Command {
 	}
 
 	cmd.Flags().StringP("seed", "s", "", "seed hex")
-	cmd.Flags().Bool("testnet", false, "Use testnet network")
 	return cmd
 }
 
