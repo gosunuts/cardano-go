@@ -15,7 +15,9 @@ func main() {
 
 	ctx := context.Background()
 	keyCmd := handler.NewKeyCmdHandler()
+	txCmd := handler.NewTxCmdHandler()
 	rootCmd.AddCommand(keyCmd.Commands(ctx)...)
+	rootCmd.AddCommand(txCmd.Commands(ctx)...)
 
 	cobra.CheckErr(rootCmd.ExecuteContext(ctx))
 }
