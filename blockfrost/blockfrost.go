@@ -29,8 +29,8 @@ type BlockfrostNode struct {
 func NewNode(network cardano.Network, projectID string) cardano.Node {
 	server := blockfrost.CardanoMainNet
 	switch network {
-	case cardano.Testnet:
-		server = blockfrost.CardanoTestNet
+	case cardano.Preview:
+		server = blockfrost.CardanoPreview
 	case cardano.Preprod:
 		server = blockfrost.CardanoPreProd
 	}

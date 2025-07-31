@@ -28,6 +28,15 @@ func NewXPrvKeyFromEntropy(entropy []byte, password string) XPrvKey {
 	return key
 }
 
+func NewXPrvKeyFromSeed(seed []byte) XPrvKey {
+	key := seed
+
+	key[0] &= 0xf8
+	key[31] = (key[31] & 0x1f) | 0x40
+
+	return key
+}
+
 // Bech32 returns the private key encoded as bech32.
 func (prv XPrvKey) Bech32(prefix string) string {
 	bech, err := bech32.EncodeFromBase256(prefix, prv)
@@ -91,6 +100,15 @@ func NewPubKey(bech string) (PubKey, error) {
 // Verify reports whether sig is a valid signature of message by the extended public key.
 func (pub XPubKey) Verify(message, sig []byte) bool {
 	return pub.PubKey().Verify(message, sig)
+}
+
+// Bech32 returns the public key encoded as bech32.
+func (pub XPubKey) Bech32(prefix string) string {
+	bech, err := bech32.EncodeFromBase256(prefix, pub)
+	if err != nil {
+		panic(err)
+	}
+	return bech
 }
 
 func (pub XPubKey) String() string {

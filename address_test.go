@@ -177,3 +177,26 @@ func TestNat(t *testing.T) {
 		}
 	}
 }
+
+func TestDecodeAddress(t *testing.T) {
+	addrBech32 := "addr1qx2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzer3n0d3vllmyqwsx5wktcd8cc3sq835lu7drv2xwl2wywfgse35a3x"
+	addr, err := NewAddress(addrBech32)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if addr.Type != Base {
+		t.Errorf("unmatch address type: %v", addr.Type)
+	}
+	if addr.Payment.Type != KeyCredential {
+		t.Errorf("unmatch payment type: %v", addr.Payment.Type)
+	}
+	if addr.Payment.KeyHash.String() != "9493315cd92eb5d8c4304e67b7e16ae36d61d34502694657811a2c8e" {
+		t.Errorf("unmatch payment keyHash: %v", addr.Payment.KeyHash.String())
+	}
+	if addr.Stake.Type != KeyCredential {
+		t.Errorf("unmatch stake type: %v", addr.Stake.Type)
+	}
+	if addr.Stake.KeyHash.String() != "337b62cfff6403a06a3acbc34f8c46003c69fe79a3628cefa9c47251" {
+		t.Errorf("unmatch stake keyHash: %v", addr.Stake.KeyHash.String())
+	}
+}
