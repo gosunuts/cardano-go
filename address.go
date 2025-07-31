@@ -1,6 +1,7 @@
 package cardano
 
 import (
+	"encoding/json"
 	"errors"
 	"math/big"
 
@@ -156,6 +157,23 @@ func (addr *Address) UnmarshalCBOR(data []byte) error {
 	addr.Pointer = decoded.Pointer
 
 	addr.Hrp = addr.getDefaultHrp()
+	return nil
+}
+
+func (addr *Address) MarshalJSON() ([]byte, error) {
+	return []byte(addr.Bech32()), nil
+}
+
+func (addr *Address) UnmarshalJSON(b []byte) error {
+	var addrStr string
+	if err := json.Unmarshal(b, &addrStr); err != nil {
+		return err
+	}
+	tmpAddr, err := NewAddress(addrStr)
+	if err != nil {
+		return err
+	}
+	*addr = tmpAddr
 	return nil
 }
 

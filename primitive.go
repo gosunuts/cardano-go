@@ -2,9 +2,11 @@ package cardano
 
 import (
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"math/big"
 	"reflect"
+	"strconv"
 
 	"github.com/cryptogarageinc/cardano-go/internal/cbor"
 )
@@ -36,6 +38,23 @@ type BigNum uint64
 
 // Coin represents the Cardano Native Token, in Lovelace.
 type Coin BigNum
+
+func (c *Coin) MarshalJSON() ([]byte, error) {
+	return []byte(strconv.FormatUint(uint64(*c), 10)), nil
+}
+
+func (c *Coin) UnmarshalJSON(b []byte) error {
+	var coinStr string
+	if err := json.Unmarshal(b, &coinStr); err != nil {
+		return err
+	}
+	val, err := strconv.ParseUint(coinStr, 10, 64)
+	if err != nil {
+		return err
+	}
+	*c = Coin(val)
+	return nil
+}
 
 // Value is a bundle of transferable Cardano Native Tokens.
 type Value struct {
@@ -505,6 +524,23 @@ func (h Hash28) String() string {
 	return hex.EncodeToString(h[:])
 }
 
+func (h Hash28) MarshalJSON() ([]byte, error) {
+	return []byte(h.String()), nil
+}
+
+func (h *Hash28) UnmarshalJSON(b []byte) error {
+	var hashStr string
+	if err := json.Unmarshal(b, &hashStr); err != nil {
+		return err
+	}
+	hashVal, err := NewHash28(hashStr)
+	if err != nil {
+		return err
+	}
+	*h = hashVal
+	return nil
+}
+
 type Hash32 []byte
 
 // NewHash32 returns a new Hash32 from a hex encoded string.
@@ -521,6 +557,23 @@ func NewHash32(h string) (Hash32, error) {
 // String returns the hex encoding representation of a Hash32
 func (h Hash32) String() string {
 	return hex.EncodeToString(h[:])
+}
+
+func (h Hash32) MarshalJSON() ([]byte, error) {
+	return []byte(h.String()), nil
+}
+
+func (h *Hash32) UnmarshalJSON(b []byte) error {
+	var hashStr string
+	if err := json.Unmarshal(b, &hashStr); err != nil {
+		return err
+	}
+	hashVal, err := NewHash32(hashStr)
+	if err != nil {
+		return err
+	}
+	*h = hashVal
+	return nil
 }
 
 type Uint64 *uint64
