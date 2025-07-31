@@ -12,22 +12,23 @@ import (
 type Network byte
 
 const (
-	Testnet Network = 0
+	Preview Network = 0
 	Mainnet Network = 1
 	Preprod Network = 2
+	Testnet Network = Preview
 )
 
 // String implements Stringer.
 func (n Network) String() string {
 	switch n {
-	case Testnet:
-		return "testnet"
+	case Preview:
+		return "preview"
 	case Mainnet:
 		return "mainnet"
 	case Preprod:
 		return "preprod"
 	default:
-		return "testnet"
+		return "preview"
 	}
 }
 
