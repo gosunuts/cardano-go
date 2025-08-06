@@ -1,5 +1,7 @@
 package cardano
 
+import "context"
+
 const (
 	ProtocolMagic = 1097911063
 )
@@ -9,16 +11,16 @@ const (
 // sending transactions and fetching state.
 type Node interface {
 	// UTxOs returns a list of unspent transaction outputs for a given address
-	UTxOs(Address) ([]UTxO, error)
+	UTxOs(context.Context, Address) ([]UTxO, error)
 
 	// Tip returns the node's current tip
-	Tip() (*NodeTip, error)
+	Tip(context.Context) (*NodeTip, error)
 
 	// SubmitTx submits a transaction to the node using cbor encoding
-	SubmitTx(*Tx) (*Hash32, error)
+	SubmitTx(context.Context, *Tx) (*Hash32, error)
 
 	// ProtocolParams returns the Node's Protocol Parameters
-	ProtocolParams() (*ProtocolParams, error)
+	ProtocolParams(context.Context) (*ProtocolParams, error)
 
 	// Network returns the node's current network type
 	Network() Network

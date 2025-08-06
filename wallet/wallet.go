@@ -1,6 +1,7 @@
 package wallet
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -53,7 +54,7 @@ func (w *Wallet) Transfer(receiver cardano.Address, amount *cardano.Value) (*car
 		pickedUtxosAmount = pickedUtxosAmount.Add(utxo.Amount)
 	}
 
-	pparams, err := w.node.ProtocolParams()
+	pparams, err := w.node.ProtocolParams(context.Background())
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +89,7 @@ func (w *Wallet) Transfer(receiver cardano.Address, amount *cardano.Value) (*car
 	}
 	txBuilder.AddOutputs(&cardano.TxOutput{Address: receiver, Amount: amount})
 
-	tip, err := w.node.Tip()
+	tip, err := w.node.Tip(context.Background())
 	if err != nil {
 		return nil, err
 	}
@@ -102,7 +103,7 @@ func (w *Wallet) Transfer(receiver cardano.Address, amount *cardano.Value) (*car
 	if err != nil {
 		return nil, err
 	}
-	return w.node.SubmitTx(tx)
+	return w.node.SubmitTx(context.Background(), tx)
 }
 
 // Balance returns the total lovelace amount of the wallet.
@@ -125,7 +126,7 @@ func (w *Wallet) findUtxos() ([]cardano.UTxO, error) {
 	}
 	walletUtxos := []cardano.UTxO{}
 	for _, addr := range addrs {
-		addrUtxos, err := w.node.UTxOs(addr)
+		addrUtxos, err := w.node.UTxOs(context.Background(), addr)
 		if err != nil {
 			return nil, err
 		}
