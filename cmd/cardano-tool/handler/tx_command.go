@@ -73,13 +73,8 @@ func (h *txCmdHandler) buildTxCmd(_ context.Context) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			hash, err := tx.Hash()
-			if err != nil {
-				return err
-			}
 			fmt.Printf("tx  : %v\n", tx.Hex())
-			fmt.Printf("hash: %v\n", hash.String())
-			return nil
+			return dumpTx(tx)
 		},
 	}
 
@@ -107,10 +102,12 @@ func buildTx(
 	if err := json.Unmarshal([]byte(outputs), &txOutputs); err != nil {
 		return nil, err
 	}
+	var totalCoin cardano.Coin
 	for i, txInput := range txInputs {
 		if txInput.Amount.MultiAsset == nil {
 			txInput.Amount.MultiAsset = cardano.NewMultiAsset()
 			txInputs[i] = txInput
+			totalCoin += txInput.Amount.Coin
 		}
 	}
 	for i, txOutput := range txOutputs {
@@ -135,6 +132,30 @@ func buildTx(
 		builder.AddChangeIfNeeded(changeAddr)
 	}
 
+	keys, err := getKeys(keysStr, txInputs)
+	if err != nil {
+		return nil, err
+	}
+	builder.Sign(keys...)
+
+	if changeAddress == "" {
+		minFee, err := builder.MinFee()
+		if err != nil {
+			return nil, err
+		}
+		builder.SetFee(minFee)
+		if len(txOutputs) == 1 && txOutputs[0].Amount.OnlyCoin() {
+			newOutputCoin := totalCoin - minFee
+			txOutputs[0].Amount.Coin = newOutputCoin
+			builder.ClearOutputs()
+			builder.AddOutputs(txOutputs...)
+		}
+	}
+
+	return builder.Build()
+}
+
+func getKeys(keysStr string, txInputs []*cardano.TxInput) ([]crypto.PrvKey, error) {
 	keys := make([]crypto.PrvKey, 0, len(txInputs))
 	keyStrList := strings.Split(keysStr, ",")
 	for _, keyStr := range keyStrList {
@@ -171,9 +192,7 @@ func buildTx(
 			keys = append(keys, childKey.PrvKey())
 		}
 	}
-	builder.Sign(keys...)
-
-	return builder.Build()
+	return keys, nil
 }
 
 func (h *txCmdHandler) dumpTxCmd(_ context.Context) *cobra.Command {
@@ -196,35 +215,46 @@ func (h *txCmdHandler) dumpTxCmd(_ context.Context) *cobra.Command {
 			if err := tx.UnmarshalCBOR(txBytes); err != nil {
 				return err
 			}
-			txHash, err := tx.Hash()
-			if err != nil {
-				return err
-			}
-
-			fmt.Printf("hash: %v\n", txHash.String())
-			fmt.Printf("IsValid: %v\n", tx.IsValid)
-			fmt.Println("txInputs:")
-			for i, txInput := range tx.Body.Inputs {
-				fmt.Printf("- [%d]: %v:%v\n", i, txInput.TxHash.String(), txInput.Index)
-			}
-			fmt.Println("txOutputs:")
-			for i, txOutput := range tx.Body.Outputs {
-				fmt.Printf("- [%d]: %s\n", i, txOutput.Address.Bech32())
-				if txOutput.Amount == nil {
-					fmt.Println("  coin: nil")
-				} else {
-					fmt.Printf("  coin: %d\n", txOutput.Amount.Coin)
-					fmt.Printf("  assets: %s\n", txOutput.Amount.MultiAsset.String())
-				}
-			}
-			fmt.Printf("WitnessSet: %v\n", tx.WitnessSet)
-			fmt.Printf("AuxiliaryData: %v\n", tx.AuxiliaryData)
-			return nil
+			return dumpTx(&tx)
 		},
 	}
 
 	cmd.Flags().StringP("tx", "t", "", "transaction hex")
 	return cmd
+}
+
+func dumpTx(tx *cardano.Tx) error {
+	txHash, err := tx.Hash()
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("hash: %v\n", txHash.String())
+	fmt.Printf("IsValid: %v\n", tx.IsValid)
+	fmt.Println("txInputs:")
+	for i, txInput := range tx.Body.Inputs {
+		fmt.Printf("- [%d]: %v:%v\n", i, txInput.TxHash.String(), txInput.Index)
+	}
+	fmt.Println("txOutputs:")
+	for i, txOutput := range tx.Body.Outputs {
+		fmt.Printf("- [%d]: %s\n", i, txOutput.Address.Bech32())
+		if txOutput.Amount == nil {
+			fmt.Println("  coin: nil")
+		} else {
+			fmt.Printf("  coin: %d\n", txOutput.Amount.Coin)
+			fmt.Printf("  assets: %s\n", txOutput.Amount.MultiAsset.String())
+		}
+	}
+	fmt.Printf("Fee: %v\n", tx.Body.Fee)
+	fmt.Println("WitnessSet:")
+	for i, vKeyWitness := range tx.WitnessSet.VKeyWitnessSet {
+		fmt.Printf("  VKeyWitnessSet[%d]: %v, %v\n", i, vKeyWitness.VKey.String(), hex.EncodeToString(vKeyWitness.Signature))
+	}
+	for i, script := range tx.WitnessSet.Scripts {
+		fmt.Printf("  Scripts[%d]: %v, %v\n", i, script.Type, script.KeyHash.String())
+	}
+	fmt.Printf("AuxiliaryData: %v\n", tx.AuxiliaryData)
+	return nil
 }
 
 var dummyRootXsk = "root_xsk1cpj6l55r9nvtpp7ymx4hqy05s8hpupepu782thtqnuat8u2k6fzaza4a3l2wcc95wvwrjx9z5u4qyfkqe5geas6mgljd2kyyvel4223r7l7u6jsscmxjcuun43sasau88cjg7stkxj4rmqf27vnll6wkyqya0lre"
