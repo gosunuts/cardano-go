@@ -1,6 +1,7 @@
 package blockfrost
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"testing"
@@ -21,7 +22,7 @@ func TestUTxOs(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	utxos, err := cli.UTxOs(addr)
+	utxos, err := cli.UTxOs(context.Background(), addr)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -37,7 +38,7 @@ func TestTip(t *testing.T) {
 		t.Fatal("env:BLOCKFROST_PROJECT_ID is not set")
 	}
 	cli := NewNode(cardano.Mainnet, projectID)
-	nodeTip, err := cli.Tip()
+	nodeTip, err := cli.Tip(context.Background())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -53,7 +54,7 @@ func TestProtocolParams(t *testing.T) {
 		t.Fatal("env:BLOCKFROST_PROJECT_ID is not set")
 	}
 	cli := NewNode(cardano.Mainnet, projectID)
-	protocolParams, err := cli.ProtocolParams()
+	protocolParams, err := cli.ProtocolParams(context.Background())
 	if err != nil {
 		t.Fatal(err)
 	}

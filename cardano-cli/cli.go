@@ -2,6 +2,7 @@ package cardanocli
 
 import (
 	"bytes"
+	"context"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -57,7 +58,7 @@ func (c *CardanoCli) runCommand(args ...string) ([]byte, error) {
 	return out.Bytes(), nil
 }
 
-func (c *CardanoCli) UTxOs(addr cardano.Address) ([]cardano.UTxO, error) {
+func (c *CardanoCli) UTxOs(_ context.Context, addr cardano.Address) ([]cardano.UTxO, error) {
 	out, err := c.runCommand("query", "utxo", "--address", addr.Bech32())
 	if err != nil {
 		return nil, err
@@ -134,7 +135,7 @@ func (c *CardanoCli) UTxOs(addr cardano.Address) ([]cardano.UTxO, error) {
 	return utxos, nil
 }
 
-func (c *CardanoCli) Tip() (*cardano.NodeTip, error) {
+func (c *CardanoCli) Tip(_ context.Context) (*cardano.NodeTip, error) {
 	out, err := c.runCommand("query", "tip")
 	if err != nil {
 		return nil, err
@@ -152,7 +153,7 @@ func (c *CardanoCli) Tip() (*cardano.NodeTip, error) {
 	}, nil
 }
 
-func (c *CardanoCli) SubmitTx(tx *cardano.Tx) (*cardano.Hash32, error) {
+func (c *CardanoCli) SubmitTx(_ context.Context, tx *cardano.Tx) (*cardano.Hash32, error) {
 	txOut := cliTx{
 		Type:    "Witnessed Tx AlonzoEra",
 		CborHex: tx.Hex(),
@@ -187,7 +188,7 @@ type protocolParameters struct {
 	CoinsPerUTXOWord cardano.Coin `json:"utxoCostPerWord"`
 }
 
-func (c *CardanoCli) ProtocolParams() (*cardano.ProtocolParams, error) {
+func (c *CardanoCli) ProtocolParams(_ context.Context) (*cardano.ProtocolParams, error) {
 	out, err := c.runCommand("query", "protocol-parameters")
 	if err != nil {
 		return nil, errors.New(string(out))

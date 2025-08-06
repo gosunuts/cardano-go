@@ -1,6 +1,7 @@
 package wallet
 
 import (
+	"context"
 	"testing"
 
 	"github.com/cryptogarageinc/cardano-go"
@@ -52,19 +53,19 @@ type MockNode struct {
 	utxos []cardano.UTxO
 }
 
-func (n *MockNode) UTxOs(addr cardano.Address) ([]cardano.UTxO, error) {
+func (n *MockNode) UTxOs(_ context.Context, addr cardano.Address) ([]cardano.UTxO, error) {
 	return n.utxos, nil
 }
 
-func (n *MockNode) Tip() (*cardano.NodeTip, error) {
+func (n *MockNode) Tip(_ context.Context) (*cardano.NodeTip, error) {
 	return &cardano.NodeTip{}, nil
 }
 
-func (n *MockNode) SubmitTx(tx *cardano.Tx) (*cardano.Hash32, error) {
+func (n *MockNode) SubmitTx(_ context.Context, tx *cardano.Tx) (*cardano.Hash32, error) {
 	return nil, nil
 }
 
-func (n *MockNode) ProtocolParams() (*cardano.ProtocolParams, error) {
+func (n *MockNode) ProtocolParams(_ context.Context) (*cardano.ProtocolParams, error) {
 	return &cardano.ProtocolParams{}, nil
 }
 
