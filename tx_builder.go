@@ -38,6 +38,16 @@ func (tb *TxBuilder) AddOutputs(outputs ...*TxOutput) {
 	tb.tx.Body.Outputs = append(tb.tx.Body.Outputs, outputs...)
 }
 
+// ClearInputs clear inputs to the transaction.
+func (tb *TxBuilder) ClearInputs() {
+	tb.tx.Body.Inputs = make([]*TxInput, 0)
+}
+
+// ClearOutputs clear outputs to the transaction.
+func (tb *TxBuilder) ClearOutputs() {
+	tb.tx.Body.Outputs = make([]*TxOutput, 0)
+}
+
 // SetTtl sets the transaction's time to live.
 func (tb *TxBuilder) SetTTL(ttl uint64) {
 	tb.tx.Body.TTL = NewUint64(ttl)

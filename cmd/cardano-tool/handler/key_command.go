@@ -139,10 +139,16 @@ func (h *keyCmdHandler) dumpKeyCmd(_ context.Context) *cobra.Command {
 				if !ok {
 					return errors.New("invalid request. unknown xpriv prefix")
 				}
-				fmt.Printf("xpriv: %s\n", xpriv.Bech32(prefix.ExtendedPrivateKeyPrefix))
-				fmt.Printf("xpub : %s\n", xpriv.XPubKey().Bech32(prefix.ExtendedPublicKeyPrefix))
-				fmt.Printf("priv : %s\n", xpriv.PrvKey().Bech32(prefix.PrivateKeyPrefix))
-				fmt.Printf("pub  : %s\n", xpriv.PrvKey().PubKey().Bech32(prefix.PublicKeyPrefix))
+				vkHash, err := xpriv.PrvKey().PubKey().Hash()
+				if err != nil {
+					return err
+				}
+				fmt.Printf("xpriv : %s\n", xpriv.Bech32(prefix.ExtendedPrivateKeyPrefix))
+				fmt.Printf("xpub  : %s\n", xpriv.XPubKey().Bech32(prefix.ExtendedPublicKeyPrefix))
+				fmt.Printf("priv  : %s\n", xpriv.PrvKey().Bech32(prefix.PrivateKeyPrefix))
+				fmt.Printf("pub   : %s\n", xpriv.PrvKey().PubKey().Bech32(prefix.PublicKeyPrefix))
+				fmt.Printf("vkHex : %s\n", xpriv.PrvKey().PubKey().String())
+				fmt.Printf("vkHash: %s\n", hex.EncodeToString(vkHash))
 			} else {
 				xpub, err := crypto.NewXPubKey(xpubStr)
 				if err != nil {
@@ -152,8 +158,14 @@ func (h *keyCmdHandler) dumpKeyCmd(_ context.Context) *cobra.Command {
 				if !ok {
 					return errors.New("invalid request. unknown xpriv prefix")
 				}
-				fmt.Printf("xpub : %s\n", xpub.Bech32(prefix.ExtendedPublicKeyPrefix))
-				fmt.Printf("pub  : %s\n", xpub.PubKey().Bech32(prefix.PublicKeyPrefix))
+				vkHash, err := xpub.PubKey().Hash()
+				if err != nil {
+					return err
+				}
+				fmt.Printf("xpub  : %s\n", xpub.Bech32(prefix.ExtendedPublicKeyPrefix))
+				fmt.Printf("pub   : %s\n", xpub.PubKey().Bech32(prefix.PublicKeyPrefix))
+				fmt.Printf("vkHex : %s\n", xpub.PubKey().String())
+				fmt.Printf("vkHash: %s\n", hex.EncodeToString(vkHash))
 			}
 			return nil
 		},
