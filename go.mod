@@ -11,7 +11,7 @@ require (
 	github.com/echovl/ed25519 v0.2.0
 	github.com/google/go-cmp v0.7.0
 	github.com/matoous/go-nanoid/v2 v2.1.0
-	github.com/spf13/cobra v1.9.1
+	github.com/spf13/cobra v1.10.1
 	github.com/spf13/viper v1.20.1
 	github.com/tyler-smith/go-bip39 v1.1.0
 	github.com/x448/float16 v0.8.4
@@ -36,7 +36,7 @@ require (
 	github.com/sourcegraph/conc v0.3.0 // indirect
 	github.com/spf13/afero v1.12.0 // indirect
 	github.com/spf13/cast v1.7.1 // indirect
-	github.com/spf13/pflag v1.0.6 // indirect
+	github.com/spf13/pflag v1.0.9 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	go.opentelemetry.io/auto/sdk v1.1.0 // indirect
 	go.opentelemetry.io/otel v1.37.0 // indirect
