@@ -3,7 +3,7 @@ package cardano
 import (
 	"fmt"
 
-	"github.com/cryptogarageinc/cardano-go/crypto"
+	"github.com/gosunuts/cardano-go/crypto"
 )
 
 type ScriptHashNamespace uint8

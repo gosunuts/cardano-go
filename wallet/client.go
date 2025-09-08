@@ -3,7 +3,7 @@ package wallet
 import (
 	"fmt"
 
-	"github.com/cryptogarageinc/cardano-go"
+	"github.com/gosunuts/cardano-go"
 	"github.com/tyler-smith/go-bip39"
 )
 

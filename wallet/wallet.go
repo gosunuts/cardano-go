@@ -6,8 +6,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/cryptogarageinc/cardano-go"
-	"github.com/cryptogarageinc/cardano-go/crypto"
+	"github.com/gosunuts/cardano-go"
+	"github.com/gosunuts/cardano-go/crypto"
 	gonanoid "github.com/matoous/go-nanoid/v2"
 	"github.com/tyler-smith/go-bip39"
 )

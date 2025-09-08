@@ -10,7 +10,7 @@ import (
 	"strconv"
 
 	"github.com/blockfrost/blockfrost-go"
-	"github.com/cryptogarageinc/cardano-go"
+	"github.com/gosunuts/cardano-go"
 )
 
 // BlockfrostNode implements Node using the blockfrost API.

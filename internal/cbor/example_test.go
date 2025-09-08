@@ -11,7 +11,7 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/cryptogarageinc/cardano-go/internal/cbor"
+	"github.com/gosunuts/cardano-go/internal/cbor"
 )
 
 func ExampleMarshal() {

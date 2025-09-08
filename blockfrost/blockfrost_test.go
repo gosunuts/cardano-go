@@ -6,7 +6,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/cryptogarageinc/cardano-go"
+	"github.com/gosunuts/cardano-go"
 )
 
 func TestUTxOs(t *testing.T) {
