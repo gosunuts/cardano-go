@@ -24,6 +24,19 @@ type BlockfrostNode struct {
 // check interface
 var _ cardano.Node = (*BlockfrostNode)(nil)
 
+func NewCustomNode(network cardano.Network, projectID, server string) *BlockfrostNode {
+	return &BlockfrostNode{
+		network:   network,
+		projectID: projectID,
+		server:    server,
+		client: blockfrost.NewAPIClient(blockfrost.APIClientOptions{
+			ProjectID: projectID,
+			Server:    server,
+		}),
+	}
+
+}
+
 // NewNode returns a new instance of BlockfrostNode.
 func NewNode(network cardano.Network, projectID string) *BlockfrostNode {
 	server := blockfrost.CardanoMainNet
