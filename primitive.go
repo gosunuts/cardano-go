@@ -8,7 +8,7 @@ import (
 	"reflect"
 	"strconv"
 
-	"github.com/cryptogarageinc/cardano-go/internal/cbor"
+	"github.com/gosunuts/cardano-go/internal/cbor"
 )
 
 type Network byte

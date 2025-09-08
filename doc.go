@@ -5,9 +5,9 @@
 // The best way to get started working with cardano-go is to use `go get` to add the
 // library.
 //
-//	 go get github.com/cryptogarageinc/cardano-go
-//		go get github.com/cryptogarageinc/cardano-go/node
-//		go get github.com/cryptogarageinc/cardano-go/tx
+//	 go get github.com/gosunuts/cardano-go
+//		go get github.com/gosunuts/cardano-go/node
+//		go get github.com/gosunuts/cardano-go/tx
 //
 // # Hello cardano-go
 //
@@ -18,8 +18,8 @@
 //	import (
 //	    "fmt"
 //
-//	    "github.com/cryptogarageinc/cardano-go/node/blockfrost"
-//	    "github.com/cryptogarageinc/cardano-go/types"
+//	    "github.com/gosunuts/cardano-go/node/blockfrost"
+//	    "github.com/gosunuts/cardano-go/types"
 //	)
 //
 //	func main() {

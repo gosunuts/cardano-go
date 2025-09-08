@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/cryptogarageinc/cardano-go"
-	"github.com/cryptogarageinc/cardano-go/internal/bech32"
+	"github.com/gosunuts/cardano-go"
+	"github.com/gosunuts/cardano-go/internal/bech32"
 	"github.com/tyler-smith/go-bip39"
 )
 

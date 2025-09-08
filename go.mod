@@ -1,4 +1,4 @@
-module github.com/cryptogarageinc/cardano-go
+module github.com/gosunuts/cardano-go
 
 go 1.23.0
 

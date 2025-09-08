@@ -4,7 +4,7 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"github.com/cryptogarageinc/cardano-go/crypto"
+	"github.com/gosunuts/cardano-go/crypto"
 	"golang.org/x/crypto/blake2b"
 )
 

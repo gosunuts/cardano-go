@@ -9,8 +9,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/cryptogarageinc/cardano-go"
-	"github.com/cryptogarageinc/cardano-go/crypto"
+	"github.com/gosunuts/cardano-go"
+	"github.com/gosunuts/cardano-go/crypto"
 	"github.com/spf13/cobra"
 )
 
