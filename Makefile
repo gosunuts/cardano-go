@@ -2,13 +2,13 @@ GOBUILD = go build
 GOTEST = go test
 
 # tools
-goimports_version = v0.34.0
+goimports_version = v0.37.0
 yamlfmt_version = v0.17.2
-golangci_version = v2.2.2
+golangci_version = v2.4.0
 govulncheck_version = v1.1.4
 actionlint_version = v1.7.7
-ghalint_version = v1.4.1
-pinact_version = v3.1.2
+ghalint_version = v1.5.3
+pinact_version = v3.4.2
 
 # targets
 cwallet:
