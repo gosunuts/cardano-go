@@ -2,6 +2,7 @@ package cardano
 
 import (
 	"bytes"
+	"crypto/sha3"
 	"encoding/binary"
 	"encoding/json"
 	"errors"
@@ -317,6 +318,55 @@ func (addr Address) getDefaultHrp() string {
 		}
 	}
 	return hrp
+}
+
+func NewByronAddressFromPubKey(pub []byte) (Address, error) {
+	if len(pub) == 0 {
+		return Address{}, errors.New("empty public key")
+	}
+
+	em, _ := cbor.CanonicalEncOptions().EncMode()
+
+	// Attributes: empty map => Icarus-style Byron (Ae2...) on mainnet.
+	// (For testnets, include attribute key 2 => protocol magic as an unsigned integer.)
+	attrs := map[uint64]any{}
+
+	// Address data for root hash: [addr_type=0 (PubKey), pubkey, attrs]
+	addrData := []any{uint8(0), pub, attrs}
+	addrDataCBOR, err := em.Marshal(addrData)
+	if err != nil {
+		return Address{}, err
+	}
+
+	// root = blake2b-224( sha3-256( cbor(addrData) ) )
+	sha := sha3.Sum256(addrDataCBOR)
+	bl, err := blake2b.New(224/8, nil)
+	if err != nil {
+		return Address{}, err
+	}
+	if _, err := bl.Write(sha[:]); err != nil {
+		return Address{}, err
+	}
+	root := bl.Sum(nil)
+
+	// Final Byron payload tuple: [root, attrs, addr_type=0]
+	finalTuple := []interface{}{root, attrs, uint8(0)}
+	payload, err := em.Marshal(finalTuple)
+	if err != nil {
+		return Address{}, err
+	}
+
+	// CRC32 (little-endian) appended to payload, then base58.
+	crc := crc32.ChecksumIEEE(payload)
+	var crcLE [4]byte
+	binary.LittleEndian.PutUint32(crcLE[:], crc)
+
+	raw := append(append([]byte(nil), payload...), crcLE[:]...)
+	return Address{
+		Kind:     AddressKindByron,
+		byronRaw: raw,
+		byronB58: base58.Encode(raw),
+	}, nil
 }
 
 // NewBaseAddress returns a new Base Address.
