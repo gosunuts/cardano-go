@@ -1,19 +1,16 @@
 package cardano
 
 import (
-	"bytes"
 	"crypto/sha3"
 	"encoding/binary"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"hash/crc32"
 	"math/big"
-	"strings"
 
-	"github.com/btcsuite/btcutil/base58"
 	"github.com/cryptogarageinc/cardano-go/internal/bech32"
 	"github.com/cryptogarageinc/cardano-go/internal/cbor"
+	"github.com/mr-tron/base58/base58"
 	"golang.org/x/crypto/blake2b"
 )
 
@@ -31,26 +28,15 @@ const (
 	BasicHrpTestnetStakingAddress string = "stake_test"
 )
 
-type AddressKind uint8
-
-const (
-	AddressKindShelley AddressKind = iota
-	AddressKindByron
-)
-
 // Address represents a Cardano address.
 type Address struct {
-	Kind AddressKind
-
 	Network Network
 	Type    AddressType
 	Pointer Pointer
 	Hrp     string
+
 	Payment StakeCredential
 	Stake   StakeCredential
-
-	byronRaw []byte
-	byronB58 string
 }
 
 // NewAddress creates an Address from a bech32 encoded string.
@@ -65,40 +51,6 @@ func NewAddress(bech string) (Address, error) {
 	}
 	addr.Hrp = hrp
 	return addr, nil
-}
-
-func NewAddressFlexible(s string) (Address, error) {
-	s = strings.TrimSpace(s)
-	if strings.HasPrefix(s, "addr1") || strings.HasPrefix(s, "stake1") {
-		return NewAddress(s)
-	}
-	if strings.HasPrefix(s, "DdzFFzC") || strings.HasPrefix(s, "Ae2tdPw") {
-		return NewByronAddressFromBase58(s)
-	}
-	return Address{}, fmt.Errorf("unsupported address format")
-}
-
-func NewByronAddressFromBase58(b58 string) (Address, error) {
-	b58 = strings.TrimSpace(b58)
-	raw := base58.Decode(b58)
-	if len(raw) < 4 {
-		return Address{}, fmt.Errorf("invalid byron address: too short")
-	}
-	payload := raw[:len(raw)-4]
-	crc := raw[len(raw)-4:]
-
-	sum := crc32.ChecksumIEEE(payload)
-	var got [4]byte
-	binary.LittleEndian.PutUint32(got[:], sum)
-	if !bytes.Equal(got[:], crc) {
-		return Address{}, fmt.Errorf("invalid byron address: bad crc")
-	}
-
-	return Address{
-		Kind:     AddressKindByron,
-		byronRaw: append([]byte(nil), raw...),
-		byronB58: b58,
-	}, nil
 }
 
 // NewAddressFromBytes creates an Address from bytes.
@@ -195,38 +147,25 @@ func (addr *Address) MarshalCBOR() ([]byte, error) {
 func (addr *Address) UnmarshalCBOR(data []byte) error {
 	bytes := []byte{}
 	if err := cborDec.Unmarshal(data, &bytes); err != nil {
+		return nil
+	}
+	decoded, err := NewAddressFromBytes(bytes)
+	if err != nil {
 		return err
 	}
 
-	if len(bytes) > 0 {
-		firstType := AddressType(bytes[0] >> 4)
-		switch firstType {
-		case Base, Base + 1, Base + 2, Base + 3, Ptr, Ptr + 1, Enterprise, Enterprise + 1, Stake, Stake + 1:
-			if tmp, err := NewAddressFromBytes(bytes); err == nil {
-				*addr = tmp
-				addr.Kind = AddressKindShelley
-				return nil
-			}
-		}
-	}
+	addr.Network = decoded.Network
+	addr.Type = decoded.Type
+	addr.Payment = decoded.Payment
+	addr.Stake = decoded.Stake
+	addr.Pointer = decoded.Pointer
 
-	*addr = Address{
-		Kind:     AddressKindByron,
-		byronRaw: append([]byte(nil), bytes...),
-	}
+	addr.Hrp = addr.getDefaultHrp()
 	return nil
 }
 
 func (addr *Address) MarshalJSON() ([]byte, error) {
-	switch addr.Kind {
-	case AddressKindByron:
-		if addr.byronB58 != "" {
-			return json.Marshal(addr.byronB58)
-		}
-		return nil, fmt.Errorf("byron address: base58 string unavailable")
-	default:
-		return json.Marshal(addr.Bech32())
-	}
+	return []byte(addr.Bech32()), nil
 }
 
 func (addr *Address) UnmarshalJSON(b []byte) error {
@@ -234,7 +173,7 @@ func (addr *Address) UnmarshalJSON(b []byte) error {
 	if err := json.Unmarshal(b, &addrStr); err != nil {
 		return err
 	}
-	tmpAddr, err := NewAddressFlexible(addrStr)
+	tmpAddr, err := NewAddress(addrStr)
 	if err != nil {
 		return err
 	}
@@ -244,10 +183,6 @@ func (addr *Address) UnmarshalJSON(b []byte) error {
 
 // Bytes returns the CBOR encoding of the Address as bytes.
 func (addr *Address) Bytes() []byte {
-	if addr.Kind == AddressKindByron {
-		return append([]byte(nil), addr.byronRaw...)
-	}
-
 	var networkByte uint8
 	switch addr.Network {
 	case Testnet, Preprod:
@@ -295,12 +230,6 @@ func (addr *Address) SetHrp(hrp string) {
 
 // String returns the Address encoded as bech32.
 func (addr Address) String() string {
-	if addr.Kind == AddressKindByron {
-		if addr.byronB58 != "" {
-			return addr.byronB58
-		}
-		return "<byron:raw-bytes>"
-	}
 	return addr.Bech32()
 }
 
