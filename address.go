@@ -1,16 +1,14 @@
 package cardano
 
 import (
-	"crypto/sha3"
-	"encoding/binary"
 	"encoding/json"
 	"errors"
 	"hash/crc32"
 	"math/big"
 
+	"github.com/btcsuite/btcutil/base58"
 	"github.com/cryptogarageinc/cardano-go/internal/bech32"
 	"github.com/cryptogarageinc/cardano-go/internal/cbor"
-	"github.com/mr-tron/base58/base58"
 	"golang.org/x/crypto/blake2b"
 )
 
@@ -28,8 +26,17 @@ const (
 	BasicHrpTestnetStakingAddress string = "stake_test"
 )
 
+type AddressKind byte
+
+const (
+	AddressKindShelley AddressKind = iota
+	AddressKindByron
+)
+
 // Address represents a Cardano address.
 type Address struct {
+	Kind AddressKind
+
 	Network Network
 	Type    AddressType
 	Pointer Pointer
@@ -37,25 +44,45 @@ type Address struct {
 
 	Payment StakeCredential
 	Stake   StakeCredential
+
+	ByronAddress *ByronAddress
 }
 
 // NewAddress creates an Address from a bech32 encoded string.
-func NewAddress(bech string) (Address, error) {
-	hrp, bytes, err := bech32.DecodeToBase256(bech)
-	if err != nil {
-		return Address{}, err
+func NewAddress(s string) (Address, error) {
+	if hrp, bytes, err := bech32.DecodeToBase256(s); err == nil {
+		addr, err := NewAddressFromBytes(bytes)
+		if err != nil {
+			return Address{}, err
+		}
+		addr.Hrp = hrp
+		return addr, nil
 	}
-	addr, err := NewAddressFromBytes(bytes)
-	if err != nil {
-		return Address{}, err
+
+	// try base58 (Byron)
+	if raw := base58.Decode(s); raw != nil {
+		addr, err := NewAddressFromBytes(raw)
+		if err != nil {
+			return Address{}, err
+		}
+		return addr, nil
 	}
-	addr.Hrp = hrp
-	return addr, nil
+
+	return Address{}, errors.New("invalid address string: neither bech32(Shelley) nor base58(Byron)")
 }
 
 // NewAddressFromBytes creates an Address from bytes.
 func NewAddressFromBytes(bytes []byte) (Address, error) {
+	if isByronCBOR(bytes) {
+		by := &ByronAddress{}
+		if err := by.UnmarshalCBOR(bytes); err != nil {
+			return Address{}, err
+		}
+		return Address{Kind: AddressKindByron, ByronAddress: by}, nil
+	}
+
 	addr := Address{
+		Kind:    AddressKindShelley,
 		Type:    AddressType(bytes[0] >> 4),
 		Network: Network(bytes[0] & 0x01),
 	}
@@ -127,6 +154,23 @@ func NewAddressFromBytes(bytes []byte) (Address, error) {
 	return addr, nil
 }
 
+func isByronCBOR(data []byte) bool {
+	type RawAddr struct {
+		_        struct{} `cbor:",toarray"`
+		Tag      cbor.Tag
+		Checksum uint32
+	}
+	var r RawAddr
+	if err := cborDec.Unmarshal(data, &r); err != nil {
+		return false
+	}
+	rawTag, ok := r.Tag.Content.([]byte)
+	if !ok || r.Tag.Number != 24 {
+		return false
+	}
+	return crc32.ChecksumIEEE(rawTag) == r.Checksum
+}
+
 // NewAddressFromBytesAndHrp creates an Address from bytes and hrp.
 func NewAddressFromBytesAndHrp(bytes []byte, hrp string) (Address, error) {
 	addr, err := NewAddressFromBytes(bytes)
@@ -146,6 +190,17 @@ func (addr *Address) MarshalCBOR() ([]byte, error) {
 // UnmarshalCBOR implements cbor.Unmarshaler.
 func (addr *Address) UnmarshalCBOR(data []byte) error {
 	bytes := []byte{}
+	if err := cborDec.Unmarshal(data, &bytes); err == nil {
+		if isByronCBOR(bytes) {
+			by := &ByronAddress{}
+			if err := by.UnmarshalCBOR(bytes); err != nil {
+				return err
+			}
+			*addr = Address{Kind: AddressKindByron, ByronAddress: by}
+			return nil
+		}
+	}
+
 	if err := cborDec.Unmarshal(data, &bytes); err != nil {
 		return nil
 	}
@@ -183,6 +238,11 @@ func (addr *Address) UnmarshalJSON(b []byte) error {
 
 // Bytes returns the CBOR encoding of the Address as bytes.
 func (addr *Address) Bytes() []byte {
+	if addr.Kind == AddressKindByron && addr.ByronAddress != nil {
+		b, _ := addr.ByronAddress.MarshalCBOR()
+		return b
+	}
+
 	var networkByte uint8
 	switch addr.Network {
 	case Testnet, Preprod:
@@ -230,6 +290,9 @@ func (addr *Address) SetHrp(hrp string) {
 
 // String returns the Address encoded as bech32.
 func (addr Address) String() string {
+	if addr.Kind == AddressKindByron && addr.ByronAddress != nil {
+		return base58.Encode(addr.ByronAddress.Bytes())
+	}
 	return addr.Bech32()
 }
 
@@ -247,55 +310,6 @@ func (addr Address) getDefaultHrp() string {
 		}
 	}
 	return hrp
-}
-
-func NewByronAddressFromPubKey(pub []byte) (Address, error) {
-	if len(pub) == 0 {
-		return Address{}, errors.New("empty public key")
-	}
-
-	em, _ := cbor.CanonicalEncOptions().EncMode()
-
-	// Attributes: empty map => Icarus-style Byron (Ae2...) on mainnet.
-	// (For testnets, include attribute key 2 => protocol magic as an unsigned integer.)
-	attrs := map[uint64]any{}
-
-	// Address data for root hash: [addr_type=0 (PubKey), pubkey, attrs]
-	addrData := []any{uint8(0), pub, attrs}
-	addrDataCBOR, err := em.Marshal(addrData)
-	if err != nil {
-		return Address{}, err
-	}
-
-	// root = blake2b-224( sha3-256( cbor(addrData) ) )
-	sha := sha3.Sum256(addrDataCBOR)
-	bl, err := blake2b.New(224/8, nil)
-	if err != nil {
-		return Address{}, err
-	}
-	if _, err := bl.Write(sha[:]); err != nil {
-		return Address{}, err
-	}
-	root := bl.Sum(nil)
-
-	// Final Byron payload tuple: [root, attrs, addr_type=0]
-	finalTuple := []interface{}{root, attrs, uint8(0)}
-	payload, err := em.Marshal(finalTuple)
-	if err != nil {
-		return Address{}, err
-	}
-
-	// CRC32 (little-endian) appended to payload, then base58.
-	crc := crc32.ChecksumIEEE(payload)
-	var crcLE [4]byte
-	binary.LittleEndian.PutUint32(crcLE[:], crc)
-
-	raw := append(append([]byte(nil), payload...), crcLE[:]...)
-	return Address{
-		Kind:     AddressKindByron,
-		byronRaw: raw,
-		byronB58: base58.Encode(raw),
-	}, nil
 }
 
 // NewBaseAddress returns a new Base Address.
